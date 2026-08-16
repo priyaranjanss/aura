@@ -107,11 +107,13 @@ These are examples of messages the backend understands (live since Phase 3):
 | what time is it               | Returns current time            |
 | increase volume               | Increases system volume         |
 | decrease volume               | Decreases system volume         |
-| mute                          | Mutes volume                    |
-| take screenshot               | Captures and saves screenshot   |
-| lock computer                 | Locks the session               |
+| mute / unmute                 | Mutes / unmutes volume          |
+| take a screenshot             | Captures the screen, shows image in chat |
+| lock computer                 | Locks the session (asks confirmation) |
+| shut down / restart           | Shuts down / restarts (asks confirmation) |
 
-> **Note:** volume, screenshot and lock land in Phase 6; the rest are live since Phase 3.
+> **Note:** volume, screenshot, lock/shutdown/restart are live since Phase 6.
+> Lock, shutdown and restart ask for confirmation first (see Confirmation flow below).
 >
 > "open <anything>" also works for any installed app by name (name is validated:
 > letters/digits/spaces only — paths and shell metacharacters are rejected).
@@ -138,7 +140,31 @@ Returns current backend status and loaded services.
 
 ---
 
-## 5. Delete Audio (after playback)
+## 5. Confirmation Flow (dangerous actions)
+
+Lock, shutdown and restart never run immediately. The first request returns a
+confirmation prompt instead of executing:
+
+```json
+{
+  "reply": "Are you sure you want to lock the computer? This will interrupt what you're doing.",
+  "type": "confirm",
+  "requires_confirmation": true
+}
+```
+
+The UI shows a dialog; if the user confirms, it re-sends the same message with
+`"confirm": true` in the request body and the action executes. Sending
+`confirm: true` without a prior prompt still executes directly (the UI only
+sends it after a dialog).
+
+**Request fields (extra):** `confirm` (bool), `lang` ("en" | "hi" for TTS).
+**Response fields (extra):** `requires_confirmation` (bool), `image_url`
+(present for screenshots).
+
+---
+
+## 6. Delete Audio (after playback)
 
 **DELETE** `/api/audio/{filename}`
 
@@ -157,7 +183,7 @@ a new file is generated (files older than 1 hour).
 
 ---
 
-## 6. WebSocket (Future / Advanced)
+## 7. WebSocket (Future / Advanced)
 
 **WS** `/ws/status`
 
@@ -167,7 +193,7 @@ Used for real-time status updates (Listening, Thinking, Speaking).
 
 ---
 
-## 7. Error Response Format
+## 8. Error Response Format
 
 ```json
 {
@@ -189,7 +215,7 @@ Used for real-time status updates (Listening, Thinking, Speaking).
 
 ---
 
-## 8. CORS
+## 9. CORS
 
 The backend enables CORS for **any origin** (`allow_origins=["*"]`) during
 development. This is safe because the server binds to `127.0.0.1` only, so

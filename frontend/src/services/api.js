@@ -16,10 +16,13 @@ const api = axios.create({
  * @param {Array<{role: string, content: string}>} history - prior messages
  * @returns {Promise<{reply: string, type: string, success: boolean, audio_url: ?string}>}
  */
-export async function sendChatMessage(message, history = []) {
+export async function sendChatMessage(message, history = [], options = {}) {
+  const { confirm = false, lang = 'en' } = options;
   const { data } = await api.post('/api/chat', {
     message,
     history: history.map((m) => ({ role: m.role, content: m.content })),
+    confirm,
+    lang,
   });
   return data;
 }

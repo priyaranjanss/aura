@@ -1,11 +1,14 @@
 // Renders one chat message: user on the right (indigo), assistant on the left.
-// Assistant replies lead with the request analysis (What/When/Who/How/...).
+// Assistant replies lead with the request analysis (What/When/Who/How/...)
+// and may include an image (e.g. a screenshot).
 export default function ChatBubble({ message }) {
   const isUser = message.role === 'user';
   const analysis = message.analysis ?? [];
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div
+      className={`animate-fade-in-up flex ${isUser ? 'justify-end' : 'justify-start'}`}
+    >
       <div
         className={`max-w-[75%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
           isUser
@@ -41,6 +44,13 @@ export default function ChatBubble({ message }) {
           </div>
         )}
         <div className="whitespace-pre-wrap">{message.content}</div>
+        {!isUser && message.image_url && (
+          <img
+            src={message.image_url}
+            alt="Screenshot"
+            className="mt-3 max-h-64 w-full rounded-lg border border-aura-border object-contain"
+          />
+        )}
       </div>
     </div>
   );

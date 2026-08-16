@@ -10,7 +10,7 @@ const makeMessage = (role, content, extra = {}) => ({
 });
 
 export const useChatStore = create((set, get) => ({
-  // List of { id, role: 'user'|'assistant', content, isError?, analysis? }
+  // List of { id, role: 'user'|'assistant', content, isError?, analysis?, image_url? }
   messages: [],
 
   // 'idle' | 'listening' | 'thinking' | 'speaking'
@@ -20,15 +20,44 @@ export const useChatStore = create((set, get) => ({
   // garbage-collected before playback finishes).
   audio: null,
 
+  // Set when the backend asks for confirmation of a dangerous action.
+  pendingConfirm: null, // { message, prompt }
+
+  // Settings
+  settingsOpen: false,
+  voiceEnabled: true,
+  lang: 'en',
+
   /** Update the live status (used by the mic button). */
   setStatus: (status) => set({ status }),
+
+  /** Open/close the settings panel. */
+  setSettingsOpen: (open) => set({ settingsOpen: open }),
+
+  /** Toggle spoken replies on/off. */
+  setVoiceEnabled: (enabled) => set({ voiceEnabled: enabled }),
+
+  /** Change the TTS language ('en' | 'hi'). */
+  setLang: (lang) => set({ lang }),
+
+  /** Answer the pending confirmation dialog. */
+  confirmPending: (confirmed) => {
+    const { pendingConfirm } = get();
+    if (!pendingConfirm) return;
+    set({ pendingConfirm: null });
+    if (confirmed) {
+      get().sendMessage(pendingConfirm.message, { confirm: true });
+    }
+  },
 
   /**
    * Send a message to the backend, append the reply, play TTS audio, and
    * handle errors.
    * @param {string} text - the user's message
+   * @param {{confirm?: boolean}} options - re-send after confirming a
+   *   dangerous action
    */
-  sendMessage: async (text) => {
+  sendMessage: async (text, options = {}) => {
     const trimmed = text.trim();
     if (!trimmed || get().status === 'thinking') return;
 
@@ -38,7 +67,30 @@ export const useChatStore = create((set, get) => ({
     }));
 
     try {
-      const data = await sendChatMessage(trimmed, get().messages);
+      const data = await sendChatMessage(trimmed, get().messages, {
+        confirm: options.confirm ?? false,
+        lang: get().lang,
+      });
+
+      // Dangerous action: the backend asks for confirmation first.
+      if (data.requires_confirmation) {
+        set((state) => ({
+          messages: [
+            ...state.messages,
+            makeMessage('assistant', data.reply, {
+              type: data.type,
+              analysis: data.analysis,
+            }),
+          ],
+          status: data.audio_url ? 'speaking' : 'idle',
+          pendingConfirm: { message: trimmed, prompt: data.reply },
+        }));
+        if (data.audio_url && get().voiceEnabled) {
+          get().playAudio(data.audio_url);
+        }
+        return;
+      }
+
       set((state) => ({
         messages: [
           ...state.messages,
@@ -46,28 +98,14 @@ export const useChatStore = create((set, get) => ({
             type: data.type,
             analysis: data.analysis,
             isError: data.success === false,
+            image_url: data.image_url,
           }),
         ],
-        status: data.audio_url ? 'speaking' : 'idle',
+        status: data.audio_url && get().voiceEnabled ? 'speaking' : 'idle',
       }));
 
-      if (data.audio_url) {
-        // The backend returns a relative path (/static/audio/...) — absolutize
-        // it against the backend so it plays in dev (frontend on :5173) and
-        // when served by the backend itself.
-        const absoluteUrl = data.audio_url.startsWith('http')
-          ? data.audio_url
-          : `${API_BASE_URL}${data.audio_url}`;
-        const audio = new Audio(absoluteUrl);
-        const finish = () => {
-          set({ status: 'idle', audio: null });
-          // The file was played (or failed) — tell the backend to delete it.
-          deleteAudioFile(data.audio_url).catch(() => {});
-        };
-        audio.onended = finish;
-        audio.onerror = finish;
-        set({ audio });
-        audio.play().catch(finish);
+      if (data.audio_url && get().voiceEnabled) {
+        get().playAudio(data.audio_url);
       }
     } catch (error) {
       console.error('[chat] request failed:', error);
@@ -85,6 +123,27 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  /**
+   * Play a spoken reply. The backend returns a relative path
+   * (/static/audio/...) — absolutize it against the backend so it plays in
+   * dev (frontend on :5173) and when served by the backend itself.
+   */
+  playAudio: (audioUrl) => {
+    const absoluteUrl = audioUrl.startsWith('http')
+      ? audioUrl
+      : `${API_BASE_URL}${audioUrl}`;
+    const audio = new Audio(absoluteUrl);
+    const finish = () => {
+      set({ status: 'idle', audio: null });
+      // The file was played (or failed) — tell the backend to delete it.
+      deleteAudioFile(audioUrl).catch(() => {});
+    };
+    audio.onended = finish;
+    audio.onerror = finish;
+    set({ audio });
+    audio.play().catch(finish);
+  },
+
   /** Clear the conversation. */
-  clearMessages: () => set({ messages: [], status: 'idle' }),
+  clearMessages: () => set({ messages: [], status: 'idle', pendingConfirm: null }),
 }));

@@ -1,4 +1,9 @@
+import { useChatStore } from '../store/chatStore';
+
 export default function Sidebar() {
+  const setSettingsOpen = useChatStore((state) => state.setSettingsOpen);
+  const clearMessages = useChatStore((state) => state.clearMessages);
+
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-aura-border bg-aura-surface">
       {/* Brand */}
@@ -23,20 +28,25 @@ export default function Sidebar() {
         </button>
         <button
           type="button"
+          onClick={() => setSettingsOpen(true)}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-aura-text-secondary transition-colors hover:bg-aura-surface-light hover:text-white"
-          title="Coming soon"
         >
           <span className="h-2 w-2 rounded-full bg-aura-border" />
           Settings
-          <span className="ml-auto rounded-full bg-aura-border px-2 py-0.5 text-[10px] font-medium text-aura-text-secondary">
-            soon
-          </span>
+        </button>
+        <button
+          type="button"
+          onClick={clearMessages}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-aura-text-secondary transition-colors hover:bg-aura-surface-light hover:text-white"
+        >
+          <span className="h-2 w-2 rounded-full bg-aura-border" />
+          Clear chat
         </button>
       </nav>
 
       {/* Footer */}
       <div className="border-t border-aura-border px-6 py-4">
-        <p className="text-xs text-aura-text-secondary">v0.1.0 · Phase 1</p>
+        <p className="text-xs text-aura-text-secondary">v1.0 · Phase 6</p>
       </div>
     </aside>
   );

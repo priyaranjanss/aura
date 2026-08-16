@@ -32,7 +32,10 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Open Spotify | ⬜ Future (add to safe list) |
 | Open any installed application by name | ✅ Phase 4 (validated generic opener) |
 | Close applications ("close brave", "quit chrome") | ✅ Phase 4 |
+| Minimize applications ("minimize notepad") | ✅ Phase 4 (ctypes + UWP support) |
+| Close other tabs in a browser | ✅ Phase 4 (UI Automation; window targeting) |
 | Type/write into apps ("write hello" after opening Notepad) | ✅ Phase 4 (pyautogui, safe text) |
+| Multi-step commands ("open notepad and minimize it") | ✅ Phase 4 (steps array) |
 
 ### Web & Search
 | Feature | Status |
@@ -46,13 +49,13 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Feature | Status |
 |---------|--------|
 | Play music on YouTube | ✅ Phase 3 |
-| Increase / Decrease / Mute / Unmute volume | ⬜ Phase 6 |
-| Take screenshot and save it | ⬜ Phase 6 |
+| Increase / Decrease / Mute / Unmute volume | ✅ Phase 6 |
+| Take screenshot and save it | ✅ Phase 6 (shown in chat) |
 | Tell current time | ✅ Phase 3 |
 | Tell current date | ✅ Phase 3 |
-| Lock the computer | ⬜ Phase 6 |
-| Shutdown computer (with confirmation) | ⬜ Phase 6 |
-| Restart computer (with confirmation) | ⬜ Phase 6 |
+| Lock the computer | ✅ Phase 6 (asks confirmation first) |
+| Shutdown computer (with confirmation) | ✅ Phase 6 |
+| Restart computer (with confirmation) | ✅ Phase 6 |
 
 ---
 
@@ -66,7 +69,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Answer general knowledge questions | ✅ Phase 4 |
 | Tell jokes, fun facts, motivational quotes | ✅ Phase 4 |
 | Explain topics in simple language | ✅ Phase 4 |
-| Multilingual support (English + Hindi) | ⬜ Phase 6 |
+| Multilingual TTS (English + Hindi voice) | ✅ Phase 6 (Settings -> Voice language) |
 | Smart intent detection (system action vs conversation) | ✅ Phase 4 (AI brain, any phrasing) + keyword fallback |
 | Request analysis before every reply (What/When/Who/How/Where/Why/Which/Whose/Whom/How much, "Not needed" when not applicable) | ✅ Phase 3 |
 
@@ -88,10 +91,13 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Feature | Status |
 |---------|--------|
 | Sidebar | ✅ Phase 1 (shell) |
-| Quick command buttons (Open Chrome, Play Music, What time is it?, etc.) | ⬜ Phase 6 |
-| Clear chat button | ⬜ Phase 6 |
+| Quick command buttons (What time is it, Open Notepad, Take a screenshot, etc.) | ✅ Phase 6 |
+| Settings panel (spoken replies, voice language, clear chat) | ✅ Phase 6 |
+| Clear chat button | ✅ Phase 6 (sidebar + settings) |
+| Confirmation dialog for dangerous actions (lock/shutdown/restart) | ✅ Phase 6 |
+| Message entrance animations | ✅ Phase 6 |
 | Theme toggle (Dark / Light) – optional | 🔮 Future |
-| Responsive design (works on different screen sizes) | ⬜ Phase 6 |
+| Responsive design (works on different screen sizes) | ⬜ Phase 6 (partial — desktop-first) |
 
 ---
 
@@ -112,7 +118,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 
 ## 6. Future / Advanced Features (Can be added later)
 
-- Wake word detection without clicking mic
+- Wake word "Hello" without keeping the tab focused (needs a desktop app)
 - Face recognition for security
 - Offline mode using local LLM (Ollama)
 - Custom command creation by user

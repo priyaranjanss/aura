@@ -11,6 +11,7 @@ import platform
 import re
 import subprocess
 import webbrowser
+from pathlib import Path
 from urllib.parse import quote
 
 SYSTEM = platform.system()  # "Windows" | "Darwin" | "Linux"
@@ -661,3 +662,170 @@ def tell_date() -> dict:
         "reply": f"Today is {now:%A, %d %B %Y}.",
         "analysis": {"what": "Tell today's date", "how": "Read the system clock"},
     }
+
+
+def _press_volume_key(vk: int) -> None:
+    """Send a single media-key press on Windows (keybd_event)."""
+    import ctypes
+
+    user32 = ctypes.windll.user32
+    user32.keybd_event(vk, 0, 0, 0)  # down
+    user32.keybd_event(vk, 0, 2, 0)  # up
+
+
+def volume_up() -> dict:
+    """Increase the system volume."""
+    try:
+        if SYSTEM == "Windows":
+            _press_volume_key(0xAF)  # VK_VOLUME_UP
+        elif SYSTEM == "Darwin":
+            subprocess.run(
+                ["osascript", "-e", "set volume output volume ((output volume of (get volume settings)) + 10)"],
+                capture_output=True, timeout=20,
+            )
+        else:
+            subprocess.run(
+                ["pactl", "set-sink-volume", "@DEFAULT_SINK@", "+10%"],
+                capture_output=True, timeout=20,
+            )
+        return {
+            "success": True,
+            "reply": "Volume increased.",
+            "analysis": {"what": "Increase the system volume", "how": "Send the volume-up media key"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("increase volume", "", e)
+
+
+def volume_down() -> dict:
+    """Decrease the system volume."""
+    try:
+        if SYSTEM == "Windows":
+            _press_volume_key(0xAE)  # VK_VOLUME_DOWN
+        elif SYSTEM == "Darwin":
+            subprocess.run(
+                ["osascript", "-e", "set volume output volume ((output volume of (get volume settings)) - 10)"],
+                capture_output=True, timeout=20,
+            )
+        else:
+            subprocess.run(
+                ["pactl", "set-sink-volume", "@DEFAULT_SINK@", "-10%"],
+                capture_output=True, timeout=20,
+            )
+        return {
+            "success": True,
+            "reply": "Volume decreased.",
+            "analysis": {"what": "Decrease the system volume", "how": "Send the volume-down media key"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("decrease volume", "", e)
+
+
+def mute_volume() -> dict:
+    """Mute (or unmute) the system volume — toggles."""
+    try:
+        if SYSTEM == "Windows":
+            _press_volume_key(0xAD)  # VK_VOLUME_MUTE
+        elif SYSTEM == "Darwin":
+            subprocess.run(
+                ["osascript", "-e", "set volume output muted not (output muted of (get volume settings))"],
+                capture_output=True, timeout=20,
+            )
+        else:
+            subprocess.run(
+                ["pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"],
+                capture_output=True, timeout=20,
+            )
+        return {
+            "success": True,
+            "reply": "Muted the volume.",
+            "analysis": {"what": "Mute the system volume", "how": "Send the mute media key"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("mute volume", "", e)
+
+
+def take_screenshot() -> dict:
+    """Capture the screen and save it under backend/static/screenshots."""
+    try:
+        import pyautogui  # lazy import
+
+        shots_dir = Path(__file__).resolve().parent.parent.parent / "static" / "screenshots"
+        shots_dir.mkdir(parents=True, exist_ok=True)
+        name = f"screenshot_{datetime.datetime.now():%Y%m%d_%H%M%S}.png"
+        path = shots_dir / name
+        image = pyautogui.screenshot()
+        image.save(str(path))
+        return {
+            "success": True,
+            "reply": f"Saved a screenshot ({name}).",
+            "image_url": f"/static/screenshots/{name}",
+            "analysis": {"what": "Take a screenshot", "how": "Capture the screen with pyautogui"},
+        }
+    except ImportError:
+        return {
+            "success": False,
+            "reply": "Screenshots aren't available - the pyautogui package is missing.",
+            "analysis": {"what": "Take a screenshot", "how": "pyautogui not installed"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("take a screenshot", "", e)
+
+
+def lock_computer() -> dict:
+    """Lock the workstation/session."""
+    try:
+        if SYSTEM == "Windows":
+            subprocess.run(
+                ["rundll32.exe", "user32.dll,LockWorkStation"],
+                capture_output=True, timeout=20,
+            )
+        elif SYSTEM == "Darwin":
+            subprocess.run(["pmset", "displaysleepnow"], capture_output=True, timeout=20)
+        else:
+            subprocess.run(
+                ["gnome-screensaver-command", "-l"], capture_output=True, timeout=20,
+            )
+        return {
+            "success": True,
+            "reply": "Locked the computer.",
+            "analysis": {"what": "Lock the computer", "how": "Lock the OS session"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("lock", "the computer", e)
+
+
+def shutdown_computer() -> dict:
+    """Shut down the computer (5s delay so the reply can be spoken)."""
+    try:
+        if SYSTEM == "Windows":
+            subprocess.run(["shutdown", "/s", "/t", "5"], capture_output=True, timeout=20)
+        elif SYSTEM == "Darwin":
+            subprocess.run(["osascript", "-e", 'tell app "System Events" to shut down'], capture_output=True, timeout=20)
+        else:
+            subprocess.run(["shutdown", "-h", "+1"], capture_output=True, timeout=20)
+        return {
+            "success": True,
+            "reply": "Shutting down the computer in 5 seconds.",
+            "analysis": {"what": "Shut down the computer", "how": "Request an OS shutdown"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("shut down", "the computer", e)
+
+
+def restart_computer() -> dict:
+    """Restart the computer (5s delay so the reply can be spoken)."""
+    try:
+        if SYSTEM == "Windows":
+            subprocess.run(["shutdown", "/r", "/t", "5"], capture_output=True, timeout=20)
+        elif SYSTEM == "Darwin":
+            subprocess.run(["osascript", "-e", 'tell app "System Events" to restart'], capture_output=True, timeout=20)
+        else:
+            subprocess.run(["shutdown", "-r", "+1"], capture_output=True, timeout=20)
+        return {
+            "success": True,
+            "reply": "Restarting the computer in 5 seconds.",
+            "analysis": {"what": "Restart the computer", "how": "Request an OS restart"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("restart", "the computer", e)

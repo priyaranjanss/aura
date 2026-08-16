@@ -44,18 +44,32 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Optional conversation history for context",
     )
+    confirm: bool = Field(
+        default=False,
+        description="True when the user confirmed a dangerous action (lock/shutdown/restart)",
+    )
+    lang: str = Field(
+        default="en", description="TTS language: 'en' or 'hi'"
+    )
 
 
 class ChatResponse(BaseModel):
     """Response returned by POST /api/chat."""
 
     reply: str = Field(..., description="Assistant's text reply")
-    type: Literal["command", "ai", "error"] = Field(
-        "ai", description="Reply type: system command, AI answer, or error"
+    type: Literal["command", "ai", "error", "confirm"] = Field(
+        "ai", description="Reply type: system command, AI answer, error, or confirmation prompt"
     )
     success: bool = True
     audio_url: Optional[str] = Field(
         default=None, description="URL to TTS audio (Phase 5; null until then)"
+    )
+    requires_confirmation: bool = Field(
+        default=False,
+        description="True when the user must confirm a dangerous action before it runs",
+    )
+    image_url: Optional[str] = Field(
+        default=None, description="URL to an image the command produced (e.g. a screenshot)"
     )
     analysis: List[Dict[str, str]] = Field(
         default_factory=build_analysis,

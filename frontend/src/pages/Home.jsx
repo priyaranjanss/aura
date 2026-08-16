@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import ChatWindow from '../components/ChatWindow';
 import MicrophoneButton from '../components/MicrophoneButton';
+import ConfirmationDialog from '../components/ConfirmationDialog';
+import SettingsPanel from '../components/SettingsPanel';
 import { useSpeech } from '../hooks/useSpeech';
 import { useChatStore } from '../store/chatStore';
+
+// One-tap example commands shown above the input box.
+const QUICK_COMMANDS = [
+  'What time is it',
+  'Open Notepad',
+  'Open YouTube',
+  'Take a screenshot',
+  'Search the web for cats',
+  'Tell me a joke',
+];
 
 const STATUS_STYLES = {
   idle: { label: 'Idle', dot: 'bg-aura-border' },
@@ -157,6 +169,21 @@ export default function Home() {
       {/* Chat area */}
       <ChatWindow />
 
+      {/* Quick command chips */}
+      <div className="flex gap-2 overflow-x-auto px-8 pb-3 pt-2">
+        {QUICK_COMMANDS.map((command) => (
+          <button
+            key={command}
+            type="button"
+            disabled={status === 'thinking'}
+            onClick={() => sendMessage(command)}
+            className="shrink-0 rounded-full border border-aura-border bg-aura-surface px-3 py-1.5 text-xs font-medium text-aura-text-secondary transition-colors hover:border-aura-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {command}
+          </button>
+        ))}
+      </div>
+
       {/* Input box */}
       <footer className="px-8 pb-6 pt-2">
         {micError && (
@@ -230,6 +257,10 @@ export default function Home() {
           </button>
         </form>
       </footer>
+
+      {/* Modals */}
+      <ConfirmationDialog />
+      <SettingsPanel />
     </main>
   );
 }

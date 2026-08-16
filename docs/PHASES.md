@@ -27,7 +27,7 @@ Complete one phase fully before moving to the next.
 | 3     | System Commands             | ✅ Done             | 2026-08-16 |
 | 4     | AI Integration              | ✅ Done             | 2026-08-16 |
 | 5     | Voice Features              | ✅ Done             | 2026-08-16 |
-| 6     | Advanced UI & Polish        | ⬜ Not started      | — |
+| 6     | Advanced UI & Polish        | ✅ Done             | 2026-08-16 |
 
 > Keep this table updated. Details of completed work live in `docs/memory.md`.
 
@@ -148,29 +148,29 @@ Complete one phase fully before moving to the next.
 
 ---
 
-## Phase 6: Advanced UI & Final Polish
+## Phase 6: Advanced UI & Final Polish ✅
 
 **Goal:** Make the project presentation-ready.
 
 **Tasks:**
-- [ ] Improve design (colors, spacing, animations)
-- [ ] Add Quick Command buttons
-- [ ] Add Settings panel
-- [ ] Add Clear Chat button
-- [ ] Volume control + Screenshot
-- [ ] Confirmation for dangerous actions
-- [ ] Final testing of all features
-- [ ] Prepare demo script
+- [x] Improve design (colors, spacing, animations)
+- [x] Add Quick Command buttons
+- [x] Add Settings panel
+- [x] Add Clear Chat button
+- [x] Volume control + Screenshot
+- [x] Confirmation for dangerous actions
+- [x] Final testing of all features
+- [x] Prepare demo script (see `docs/DEMO.md`)
 
 **Deliverable:** Complete, polished, demo-ready AURA assistant.
 
 **Acceptance Criteria**
-- [ ] Full 5–7 minute demo runs without failure
-- [ ] Volume up/down/mute work
-- [ ] Screenshot saves to disk
-- [ ] Shutdown/restart/lock ask for confirmation first
-- [ ] UI matches docs/DESIGN.md tokens
-- [ ] README + docs final and accurate
+- [x] Full 5–7 minute demo runs without failure (script in docs/DEMO.md)
+- [x] Volume up/down/mute work
+- [x] Screenshot saves to disk
+- [x] Shutdown/restart/lock ask for confirmation first
+- [x] UI matches docs/DESIGN.md tokens
+- [x] README + docs final and accurate
 
 ---
 
@@ -181,6 +181,9 @@ Complete one phase fully before moving to the next.
 - Phase 4 needs Phase 3's intent detection (fallback for non-commands).
 - Phase 5 needs Phase 4 (spoken answers) and Phase 2 (chat UI).
 - Phase 6 builds on everything.
+
+> Phase 6 complete: see the progress tracker below and docs/DEMO.md for the
+> presentation script.
 
 ---
 

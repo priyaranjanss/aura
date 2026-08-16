@@ -193,7 +193,38 @@ on. Browser dropping the mic is handled with an auto-restart.
 **Notes / next phase (Phase 6 – Advanced UI & Polish):**
 - Quick command buttons, Settings panel, Clear Chat button
 - Volume control + screenshot (pyautogui), confirmation for dangerous actions
-- Multilingual, animations, demo script
+- ~~Multilingual, animations, demo script~~ → all done in Phase 6 below
+
+---
+
+## Phase 6 – Advanced UI & Final Polish ✅ (completed)
+
+**Goal:** presentation-ready AURA.
+
+**Completed:**
+- **New system actions** (system_service + allowlist + AI prompt + keyword
+  fallbacks): `volume_up` / `volume_down` / `mute_volume` (Windows media keys,
+  macOS osascript, Linux pactl), `take_screenshot` (pyautogui → saved to
+  `backend/static/screenshots/`, `image_url` shown in the chat bubble),
+  `lock_computer` / `shutdown_computer` / `restart_computer`.
+- **Confirmation flow for dangerous actions:** lock/shutdown/restart never run
+  immediately. The backend returns `type: "confirm"` +
+  `requires_confirmation: true` first (both for AI steps and the keyword
+  fallback); the UI shows a Confirm dialog and re-sends the same message with
+  `confirm: true`, which then executes. Verified: "lock the computer" →
+  confirmation prompt (machine NOT locked); detection helpers tested for
+  lock/shutdown/restart vs safe messages.
+- **Frontend:** quick command chips above the input (What time is it, Open
+  Notepad, Open YouTube, Take a screenshot, Search the web for cats, Tell me a
+  joke); Settings panel modal (spoken-replies toggle, voice language en/hi,
+  clear chat); Clear Chat button in the sidebar; confirmation dialog; message
+  fade-in animation (`animate-fade-in-up`); screenshot images render in
+  bubbles.
+- **API:** `ChatRequest` gained `confirm` (bool) and `lang` (en/hi for TTS);
+  `ChatResponse` gained `requires_confirmation` and `image_url`.
+- Verified live: volume up → "Volume increased.", screenshot → saved + serves
+  200 image/png + image_url, lock → confirm gate. `npm run build` passes.
+- Demo script written to `docs/DEMO.md`.
 
 ---
 
@@ -309,3 +340,4 @@ PHASES, DESIGN, FEATURES, API, DEVELOPMENT, and this file.
 | v1.11 | 2026-08-16 | Wake word changed to "Hello" (+ variants) per user request. |
 | v1.12 | 2026-08-16 | TTS audio deleted after playback: DELETE /api/audio/{filename} (validated) + 1h orphan sweep. Also fixed relative audio_url not playing in dev (absolutized against backend base; strong ref kept). |
 | v1.13 | 2026-08-16 | Command replies use "done" format ("Opened notepad.") instead of "doing" ("Opening notepad."). |
+| v1.14 | 2026-08-16 | Phase 6 complete: volume/screenshot/lock-shutdown-restart actions, confirmation flow for dangerous actions, quick commands, settings panel, clear chat, animations, demo script (docs/DEMO.md). |

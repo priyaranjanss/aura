@@ -22,7 +22,45 @@ _AI_ACTIONS = {
     "search_wikipedia",
     "tell_time",
     "tell_date",
+    "volume_up",
+    "volume_down",
+    "mute_volume",
+    "take_screenshot",
+    "lock_computer",
+    "shutdown_computer",
+    "restart_computer",
 }
+
+# Dangerous actions: the user must confirm them in the UI before they run.
+DANGEROUS_ACTIONS = {"lock_computer", "shutdown_computer", "restart_computer"}
+
+# Keyword hints that map to dangerous actions (used by the offline fallback).
+_DANGEROUS_HINTS = [
+    (re.compile(r"\b(lock|lock the computer|lock screen|lock my computer)\b"), "lock_computer"),
+    (re.compile(r"\b(shutdown|shut down|turn off|power off|switch off)\b"), "shutdown_computer"),
+    (re.compile(r"\b(restart|reboot|reset the computer)\b"), "restart_computer"),
+]
+
+
+def dangerous_action_in_steps(steps: list):
+    """Return the first dangerous action name in a list of steps, or None."""
+    if not isinstance(steps, list):
+        return None
+    for step in steps:
+        if isinstance(step, dict):
+            action = str(step.get("action", "")).strip().lower()
+            if action in DANGEROUS_ACTIONS:
+                return action
+    return None
+
+
+def dangerous_action_in_message(message: str):
+    """Return the dangerous action hinted by a message, or None."""
+    msg = message.lower()
+    for pattern, action in _DANGEROUS_HINTS:
+        if pattern.search(msg):
+            return action
+    return None
 
 _BROWSERS = {"brave", "chrome", "firefox", "edge", "microsoft edge", "default", "default browser"}
 
@@ -53,6 +91,20 @@ def execute_ai_command(command: dict):
     if action == "minimize_app":
         target = target or str(command.get("app", "")).strip()
         return system_service.minimize_app(target)
+    if action == "volume_up":
+        return system_service.volume_up()
+    if action == "volume_down":
+        return system_service.volume_down()
+    if action == "mute_volume":
+        return system_service.mute_volume()
+    if action == "take_screenshot":
+        return system_service.take_screenshot()
+    if action == "lock_computer":
+        return system_service.lock_computer()
+    if action == "shutdown_computer":
+        return system_service.shutdown_computer()
+    if action == "restart_computer":
+        return system_service.restart_computer()
     if action == "type_text":
         app = str(command.get("app", "")).strip()
         return system_service.type_text(target, app=app)
@@ -121,6 +173,18 @@ def handle(message: str):
         if target.startswith("the "):
             target = target[4:].strip()
         return system_service.minimize_app(target)
+
+    # --- Volume ("volume up", "increase volume", "mute") ----------------
+    if re.search(r"(volume|sound)\s+(up|increase|raise|louder)|(increase|raise|turn\s+up)\s+(the\s+)?(volume|sound)", msg):
+        return system_service.volume_up()
+    if re.search(r"(volume|sound)\s+(down|decrease|lower|quieter)|(decrease|lower|turn\s+down)\s+(the\s+)?(volume|sound)", msg):
+        return system_service.volume_down()
+    if re.search(r"\b(mute|unmute)\b", msg):
+        return system_service.mute_volume()
+
+    # --- Screenshot ("take screenshot", "capture the screen") ----------
+    if re.search(r"(take|capture|save|grab)\s+(a\s+)?(screenshot|screen\s+shot|screen\s+capture)", msg) or msg in {"screenshot", "screen shot"}:
+        return system_service.take_screenshot()
 
     # --- Time & date ---------------------------------------------------
     if re.search(r"(what|current|tell)[^.]{0,15}time", msg) or msg in {"time", "the time"}:

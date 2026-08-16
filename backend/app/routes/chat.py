@@ -30,16 +30,21 @@ def delete_audio(filename: str):
     return {"deleted": True}
 
 
-def _with_audio(**fields) -> ChatResponse:
+def _with_audio(lang: str = "en", **fields) -> ChatResponse:
     """Build a ChatResponse and attach TTS audio for the reply (best effort)."""
     reply = fields["reply"]
-    fields["audio_url"] = speech_service.generate_speech(reply)
+    fields["audio_url"] = speech_service.generate_speech(reply, lang=lang)
     return ChatResponse(**fields)
 
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(payload: ChatRequest) -> ChatResponse:
-    """Handle a user message: AI analyzes it, then safe code executes."""
+    """Handle a user message: AI analyzes it, then safe code executes.
+
+    Dangerous actions (lock/shutdown/restart) require confirmation: the first
+    time they're requested the backend returns type="confirm" and the UI asks
+    the user; the UI then re-sends the same message with confirm=True.
+    """
     history = [m.model_dump() for m in payload.history]
 
     # 1. AI brain: analyze the request (intent + question analysis + reply).
@@ -49,9 +54,30 @@ def chat(payload: ChatRequest) -> ChatResponse:
     except Exception as e:  # noqa: BLE001 - the app must never crash on AI failure
         print(f"[ai] generate_reply failed: {e}")
 
+    def _confirm_response(action: str) -> ChatResponse:
+        labels = {
+            "lock_computer": "lock the computer",
+            "shutdown_computer": "shut down the computer",
+            "restart_computer": "restart the computer",
+        }
+        label = labels.get(action, action.replace("_", " "))
+        return _with_audio(
+            lang=payload.lang,
+            reply=f"Are you sure you want to {label}? This will interrupt what you're doing.",
+            type="confirm",
+            success=False,
+            requires_confirmation=True,
+            analysis=build_analysis({"what": f"Confirm: {label}", "how": "Ask the user to confirm"}),
+        )
+
     # 2. If the AI suggested commands (one or more steps), validate and run
     #    each one in order ("open notepad and minimize it" -> two steps).
     if ai_result and ai_result.get("steps"):
+        # Dangerous action without confirmation -> ask first.
+        if not payload.confirm:
+            dangerous = command_service.dangerous_action_in_steps(ai_result["steps"])
+            if dangerous:
+                return _confirm_response(dangerous)
         results = command_service.execute_ai_steps(ai_result["steps"])
         if results:
             reply = " ".join(r["reply"] for r in results)
@@ -59,21 +85,30 @@ def chat(payload: ChatRequest) -> ChatResponse:
             analysis = build_analysis(
                 ai_result.get("analysis") or results[0].get("analysis", {})
             )
+            image_url = next((r.get("image_url") for r in results if r.get("image_url")), None)
             return _with_audio(
+                lang=payload.lang,
                 reply=reply,
                 type="command",
                 success=success,
                 analysis=analysis,
+                image_url=image_url,
             )
 
     # 3. Offline fallback: keyword-based detection (works without the AI).
+    if not payload.confirm:
+        dangerous = command_service.dangerous_action_in_message(payload.message)
+        if dangerous:
+            return _confirm_response(dangerous)
     result = command_service.handle(payload.message)
     if result is not None:
         return _with_audio(
+            lang=payload.lang,
             reply=result["reply"],
             type="command",
             success=result["success"],
             analysis=build_analysis(result.get("analysis", {})),
+            image_url=result.get("image_url"),
         )
 
     # 4. Conversation: show the AI's answer (or a friendly error if AI is down).
@@ -83,6 +118,7 @@ def chat(payload: ChatRequest) -> ChatResponse:
             or {"what": "Answer the user's question", "how": f"AI provider ({config.AI_PROVIDER})"}
         )
         return _with_audio(
+            lang=payload.lang,
             reply=ai_result["reply"],
             type="ai",
             success=True,
@@ -90,6 +126,7 @@ def chat(payload: ChatRequest) -> ChatResponse:
         )
 
     return _with_audio(
+        lang=payload.lang,
         reply=(
             "Sorry, I couldn't reach the AI service. "
             "Check that AI_PROVIDER and AI_API_KEY are set correctly in backend/.env."
