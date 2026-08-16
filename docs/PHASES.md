@@ -71,11 +71,11 @@ Complete one phase fully before moving to the next.
 **Deliverable:** You can type messages and get replies from the backend.
 
 **Acceptance Criteria**
-- [ ] Typing a message and pressing Enter shows it as a user bubble
-- [ ] Backend reply appears as an assistant bubble
-- [ ] "Thinking..." indicator shows while waiting
-- [ ] Chat history survives component re-renders (Zustand)
-- [ ] Backend errors show a friendly message instead of crashing
+- [x] Typing a message and pressing Enter shows it as a user bubble
+- [x] Backend reply appears as an assistant bubble
+- [x] "Thinking..." indicator shows while waiting
+- [x] Chat history survives component re-renders (Zustand)
+- [x] Backend errors show a friendly message instead of crashing
 
 ---
 
@@ -95,12 +95,12 @@ Complete one phase fully before moving to the next.
 **Deliverable:** Saying or typing "open chrome" actually opens Chrome.
 
 **Acceptance Criteria**
-- [ ] "open chrome" opens Chrome
-- [ ] "open youtube" opens YouTube in the browser
-- [ ] "search google for cats" opens a Google search
-- [ ] "what time is it" returns the current time
-- [ ] Unknown commands fall through to conversation (Phase 4)
-- [ ] Every command failure returns a friendly message
+- [x] "open chrome" opens Chrome
+- [x] "open youtube" opens YouTube in the browser
+- [x] "search google for cats" opens a Google search
+- [x] "what time is it" returns the current time
+- [x] Unknown commands fall through to conversation (Phase 4)
+- [x] Every command failure returns a friendly message
 
 ---
 
@@ -119,10 +119,10 @@ Complete one phase fully before moving to the next.
 **Deliverable:** You can ask any question and get smart answers.
 
 **Acceptance Criteria**
-- [ ] General questions get intelligent answers
-- [ ] Conversation context is remembered (history sent)
-- [ ] Missing/invalid API key shows a friendly fallback
-- [ ] Command routing still wins over AI for system intents
+- [x] General questions get intelligent answers
+- [x] Conversation context is remembered (history sent)
+- [x] Missing/invalid API key shows a friendly fallback
+- [x] Command routing still wins over AI for system intents
 
 ---
 
@@ -140,11 +140,11 @@ Complete one phase fully before moving to the next.
 **Deliverable:** You can fully talk to AURA and it talks back.
 
 **Acceptance Criteria**
-- [ ] Clicking the mic captures speech → text
-- [ ] Text appears in the chat and gets answered
-- [ ] The reply is spoken aloud (edge-tts audio)
-- [ ] Status pill shows Listening (green), Thinking (amber), Speaking (indigo)
-- [ ] Text input still works if the microphone is blocked
+- [x] Clicking the mic captures speech → text
+- [x] Text appears in the chat and gets answered
+- [x] The reply is spoken aloud (edge-tts audio)
+- [x] Status pill shows Listening (green), Thinking (amber), Speaking (indigo)
+- [x] Text input still works if the microphone is blocked
 
 ---
 
