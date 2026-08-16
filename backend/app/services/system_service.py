@@ -55,6 +55,21 @@ _APPS = {
     "edge": {"Windows": "msedge", "Darwin": "Microsoft Edge", "Linux": "microsoft-edge"},
 }
 
+# Windows system tools (control-panel applets / MMC snap-ins) that the
+# generic app opener can't find by name. "device manager" -> devmgmt.msc etc.
+_SYSTEM_TOOLS = {
+    "device manager": "devmgmt.msc",
+    "task manager": "taskmgr",
+    "control panel": "control",
+    "settings": "ms-settings:",
+    "disk management": "diskmgmt.msc",
+    "services": "services.msc",
+    "system properties": "sysdm.cpl",
+    "system information": "msinfo32",
+    "registry editor": "regedit",
+    "network connections": "ncpa.cpl",
+}
+
 # Safe list of websites: keyword -> URL.
 _WEBSITES = {
     "google": "https://www.google.com",
@@ -87,6 +102,23 @@ def open_app(name: str) -> dict:
     """
     key = name.lower()
     try:
+        # Windows system tools: "device manager", "task manager", etc.
+        if key in _SYSTEM_TOOLS:
+            if SYSTEM != "Windows":
+                return {
+                    "success": False,
+                    "reply": f"'{key}' is a Windows system tool and isn't available on {SYSTEM}.",
+                    "analysis": {"what": f"Open '{key}'", "how": "Windows-only tool"},
+                }
+            os.startfile(_SYSTEM_TOOLS[key])
+            return {
+                "success": True,
+                "reply": f"Opened {key}.",
+                "analysis": {
+                    "what": f"Open the '{key}' system tool",
+                    "how": "Launch the Windows tool (" + _SYSTEM_TOOLS[key] + ")",
+                },
+            }
         if key in _APPS:
             if SYSTEM == "Windows":
                 os.startfile(_APPS[key]["Windows"])
@@ -624,6 +656,53 @@ def search_youtube(query: str, action: str = "search", browser: str = "") -> dic
         }
     except Exception as e:  # noqa: BLE001
         return _fail("play", query, e)
+
+
+def search_windows(query: str) -> dict:
+    """Search the operating system itself (Windows Start search / Spotlight).
+
+    Presses Win (or Cmd+Space on macOS) and types the query, so Windows
+    search results appear on screen. The user picks the result — nothing is
+    opened automatically.
+    """
+    try:
+        import time
+
+        import pyautogui  # lazy import
+
+        if SYSTEM == "Windows":
+            pyautogui.press("win")
+            time.sleep(0.7)
+            pyautogui.typewrite(query, interval=0.02)
+            time.sleep(1.0)
+            target = "Windows"
+        elif SYSTEM == "Darwin":
+            pyautogui.hotkey("command", "space")
+            time.sleep(0.7)
+            pyautogui.typewrite(query, interval=0.02)
+            target = "Spotlight"
+        else:
+            return {
+                "success": False,
+                "reply": "Searching the operating system is only supported on Windows and macOS.",
+                "analysis": {"what": f"Search the OS for '{query}'", "how": "Not supported on Linux"},
+            }
+        return {
+            "success": True,
+            "reply": f"Searched {target} for '{query}'.",
+            "analysis": {
+                "what": f"Search the {target} OS search for '{query}'",
+                "how": f"Open {target} search and type the query",
+            },
+        }
+    except ImportError:
+        return {
+            "success": False,
+            "reply": "Searching the OS isn't available - the pyautogui package is missing.",
+            "analysis": {"what": "Search the OS", "how": "pyautogui not installed"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("search", f"{query} in the OS", e)
 
 
 def search_wikipedia(query: str) -> dict:

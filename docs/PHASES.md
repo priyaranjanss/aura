@@ -30,6 +30,8 @@ Complete one phase fully before moving to the next.
 | 6     | Advanced UI & Polish        | ✅ Done             | 2026-08-16 |
 
 > Keep this table updated. Details of completed work live in `docs/memory.md`.
+> For the current status of every feature, see [FEATURES.md](FEATURES.md) —
+> the single source of truth (phases here list *tasks*, not features).
 
 ---
 

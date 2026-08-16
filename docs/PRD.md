@@ -61,68 +61,25 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 
 ## 3. Features
 
-### Feature Matrix (Priority → Phase)
+**The complete, up-to-date feature list with status and phase mapping lives in
+[docs/FEATURES.md](FEATURES.md) — the single source of truth.** This section
+only records the *priority tiers* the requirements were planned around, so
+requirements and feature status stay in separate places.
 
-| # | Feature                       | Priority | Phase |
-|---|-------------------------------|----------|-------|
-| 1 | Text input chat               | Core     | 2     |
-| 2 | Chat history in UI            | Core     | 2     |
-| 3 | Open applications             | Core     | 3     |
-| 4 | Open websites                 | Core     | 3     |
-| 5 | Search Google / YouTube / Wikipedia | Core | 3     |
-| 6 | Tell time & date              | Core     | 3     |
-| 7 | Intelligent conversation (AI service) | Core | 4     |
-| 8 | Voice input (Web Speech API)  | Core     | 5     |
-| 9 | Text-to-Speech (edge-tts)     | Core     | 5     |
-| 10 | Real-time status (Listening/Thinking/Speaking) | Core | 5 |
-| 11 | Volume control                | Should   | 6     |
-| 12 | Screenshot                    | Should   | 6     |
-| 13 | Quick command buttons         | Should   | 6     |
-| 14 | Settings panel                | Should   | 6     |
-| 15 | Multilingual (English + Hindi) | Should  | 6     |
-| 16 | Confirmation for dangerous actions | Should | 6 |
-| 17 | Error handling with friendly replies | Should | 2–6 |
-| 18 | Conversation memory           | Should   | 4     |
-| 19 | Wake word ("Hey Aura")        | Nice-to-have | Future |
-| 20 | Offline mode (local LLM)      | Nice-to-have | Future |
-| 21 | Custom user-defined commands  | Nice-to-have | Future |
-| 22 | Face recognition unlock       | Nice-to-have | Future |
-| 23 | Mobile companion app          | Nice-to-have | Future |
+### Priority Tiers
 
-### Core Features (Must Have)
+- **Core (must have):** text chat, chat history, computer control (open
+  apps/websites, search, time & date), AI conversation, voice input,
+  text-to-speech, real-time status, dark UI.
+- **Should have:** volume control, screenshot, quick command buttons,
+  settings panel, multilingual TTS, confirmation for dangerous actions,
+  friendly error handling, conversation memory.
+- **Nice to have (future):** offline mode (local LLM), custom user-defined
+  commands, face recognition unlock, mobile companion app, voice cloning,
+  plugin system, multi-user support.
 
-- Voice input using laptop microphone
-- Text input as alternative
-- Text-to-Speech (assistant speaks replies)
-- Open applications (Chrome, VS Code, Notepad, Calculator, etc.)
-- Open websites (Google, YouTube, Gmail, Wikipedia…)
-- Search Google / YouTube / Wikipedia
-- Play music on YouTube
-- Tell current time and date
-- Volume control (up / down / mute)
-- Take screenshot
-- Intelligent conversation using the AI service (Gemini by default)
-- Chat history in the UI
-- Real-time status (Listening / Thinking / Speaking)
-- Modern dark-themed React UI
-
-### Advanced Features (Should Have)
-
-- Quick command buttons
-- Settings panel
-- Multilingual support (English + Hindi)
-- Confirmation before dangerous actions (shutdown / restart)
-- Lock computer
-- Error handling with friendly voice replies
-- Conversation memory (context awareness)
-
-### Future Features (Nice to Have)
-
-- Wake word ("Hey Aura")
-- Offline mode with local LLM
-- Custom user-defined commands
-- Face recognition unlock
-- Mobile companion app
+> Every feature name above is detailed with its status in FEATURES.md; do not
+> duplicate feature tables here.
 
 ---
 

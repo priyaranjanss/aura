@@ -20,6 +20,7 @@ _AI_ACTIONS = {
     "search_google",
     "search_youtube",
     "search_wikipedia",
+    "search_windows",
     "tell_time",
     "tell_date",
     "volume_up",
@@ -119,7 +120,9 @@ def execute_ai_command(command: dict):
     if action == "search_youtube":
         return system_service.search_youtube(target, browser=browser)
     if action == "search_wikipedia":
-        return system_service.search_wikipedia(target, browser=browser)
+        return system_service.search_wikipedia(target)
+    if action == "search_windows":
+        return system_service.search_windows(target)
     if action == "tell_time":
         return system_service.tell_time()
     if action == "tell_date":
@@ -227,6 +230,16 @@ def handle(message: str):
     m = re.search(r"search\s+wikipedia\s+for\s+(.+)$", msg)
     if m:
         return system_service.search_wikipedia(m.group(1).strip())
+
+    # --- Search Windows itself ("search hello in windows", "search windows for X") ---
+    m = re.search(r"search\s+(.+?)\s+in\s+windows$", msg)
+    if m:
+        return system_service.search_windows(m.group(1).strip())
+    m = re.search(r"search\s+windows\s+for\s+(.+)$", msg)
+    if m:
+        return system_service.search_windows(m.group(1).strip())
+    if msg.startswith("find ") and msg.endswith(" in windows"):
+        return system_service.search_windows(msg[5:-10].strip())
 
     # --- Music on YouTube ("play music", "play despacito", "play X on youtube") ---
     if re.match(r"^play\s+(music|song)(\s+on\s+youtube)?$", msg):

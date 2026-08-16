@@ -89,7 +89,9 @@ curl -X POST http://127.0.0.1:8001/api/chat \
 
 ## 3. Available Commands Reference
 
-These are examples of messages the backend understands (live since Phase 3):
+These are examples of messages the backend understands (live since Phase 3).
+This is the API-level reference; the full feature list with status lives in
+[FEATURES.md](FEATURES.md).
 
 | User Message                  | Action                          |
 |-------------------------------|---------------------------------|
@@ -103,6 +105,8 @@ These are examples of messages the backend understands (live since Phase 3):
 | open youtube                  | Opens YouTube                   |
 | open youtube in brave         | Opens YouTube in Brave/Chrome/Firefox/Edge |
 | search google for cats        | Searches Google                 |
+| find device manager           | Opens Device Manager (system tool) |
+| search hello in windows       | Opens Windows search with "hello" |
 | play music on youtube         | Opens YouTube music search      |
 | what time is it               | Returns current time            |
 | increase volume               | Increases system volume         |

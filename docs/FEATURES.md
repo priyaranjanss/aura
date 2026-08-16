@@ -1,6 +1,8 @@
 # AURA – Complete Feature List
 
-This document lists all features of the AURA Voice Assistant, grouped by category.
+**This is the single source of truth for AURA features.** Other docs
+(README, PRD, API, PHASES) point here instead of duplicating feature lists.
+Every feature, its status, and the phase it landed in lives in this file.
 
 **Status legend:** ✅ Done · 🚧 In progress · ⬜ Planned (phase) · 🔮 Future
 
@@ -16,6 +18,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Real-time status feedback (Listening → Thinking → Speaking) | ✅ Phase 5 |
 | Support for continuous conversation | ✅ Phase 4 |
 | Wake word ("Hello" / "Hey AURA" / etc.) + auto-sleep | ✅ Phase 5 (Wake toggle, continuous listening) |
+| Mic permission / offline errors surface visibly (not silent) | ✅ Phase 5 |
 
 ---
 
@@ -31,9 +34,9 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Open File Explorer / Finder | ✅ Phase 3 |
 | Open Spotify | ⬜ Future (add to safe list) |
 | Open any installed application by name | ✅ Phase 4 (validated generic opener) |
+| Open Windows system tools (Device Manager, Task Manager, Settings, Disk Management, Services…) | ✅ Phase 4 (devmgmt.msc etc.) |
 | Close applications ("close brave", "quit chrome") | ✅ Phase 4 |
 | Minimize applications ("minimize notepad") | ✅ Phase 4 (ctypes + UWP support) |
-| Close other tabs in a browser | ✅ Phase 4 (UI Automation; window targeting) |
 | Type/write into apps ("write hello" after opening Notepad) | ✅ Phase 4 (pyautogui, safe text) |
 | Multi-step commands ("open notepad and minimize it") | ✅ Phase 4 (steps array) |
 
@@ -44,6 +47,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Search Google by voice/text | ✅ Phase 3 |
 | Search YouTube | ✅ Phase 3 |
 | Search Wikipedia and get summary | ⬜ Phase 6 (summary) · ✅ Phase 3 (open search) |
+| Search Windows itself ("search hello in windows") | ✅ Phase 4 (Win key + type) |
 
 ### Media & System
 | Feature | Status |
@@ -71,6 +75,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Explain topics in simple language | ✅ Phase 4 |
 | Multilingual TTS (English + Hindi voice) | ✅ Phase 6 (Settings -> Voice language) |
 | Smart intent detection (system action vs conversation) | ✅ Phase 4 (AI brain, any phrasing) + keyword fallback |
+| Command confirmations use completed wording ("Opened notepad.", not "Opening…") | ✅ Phase 6 |
 | Request analysis before every reply (What/When/Who/How/Where/Why/Which/Whose/Whom/How much, "Not needed" when not applicable) | ✅ Phase 3 |
 
 ---
@@ -113,6 +118,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Modular code structure (easy to extend) | ✅ Phase 1 |
 | Local execution (full control over the laptop) | ✅ Phase 1 |
 | Secure API key handling via `.env` | ✅ Phase 1 |
+| TTS audio files deleted after playback (auto-cleanup) | ✅ Phase 5 (DELETE /api/audio + 1h orphan sweep) |
 
 ---
 
@@ -172,5 +178,6 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | v1.3 | 2026-08-16 | Added request-analysis feature (all question dimensions answered before the reply). |
 | v1.4 | 2026-08-16 | Marked Phase 4 AI features as done (Groq provider, context, structured analysis). |
 | v1.5 | 2026-08-16 | Marked Phase 5 voice features as done (mic STT, edge-tts TTS, status pill). |
+| v1.6 | 2026-08-16 | Added missing features (audio auto-delete, done-format replies, mic error surfacing); declared single source of truth. |
 
 ---
