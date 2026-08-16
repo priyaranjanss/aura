@@ -4,8 +4,11 @@ Phase 1: serves a health/hello endpoint and enables CORS for the React
 frontend running on http://localhost:5173.
 """
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.routes.chat import router as chat_router
 
@@ -29,6 +32,10 @@ app.add_middleware(
 
 app.include_router(chat_router)
 
+# Serve generated TTS audio (backend/static).
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/")
 def root():

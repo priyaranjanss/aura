@@ -1,16 +1,103 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ChatWindow from '../components/ChatWindow';
+import MicrophoneButton from '../components/MicrophoneButton';
+import { useSpeech } from '../hooks/useSpeech';
 import { useChatStore } from '../store/chatStore';
 
 const STATUS_STYLES = {
   idle: { label: 'Idle', dot: 'bg-aura-border' },
+  sleeping: { label: 'Sleeping… say “Hello” to wake up', dot: 'bg-aura-border' },
+  listening: { label: 'Listening...', dot: 'bg-green-500' },
   thinking: { label: 'Thinking...', dot: 'bg-amber-500' },
+  speaking: { label: 'Speaking...', dot: 'bg-aura-primary' },
 };
+
+// How long AURA stays awake after the wake word before sleeping again.
+const AWAKE_MS = 8000;
 
 export default function Home() {
   const [input, setInput] = useState('');
+  const [listening, setListening] = useState(false);
+  const [wakeMode, setWakeMode] = useState(false);
+  const [micError, setMicError] = useState(null);
   const status = useChatStore((state) => state.status);
+  const setStatus = useChatStore((state) => state.setStatus);
   const sendMessage = useChatStore((state) => state.sendMessage);
+  const {
+    supported,
+    startListening,
+    stopListening,
+    startWakeListening,
+    stopWakeListening,
+  } = useSpeech();
+  const wakeTimerRef = useRef(null);
+
+  const sleepNow = () => {
+    const current = useChatStore.getState().status;
+    if (current === 'thinking' || current === 'speaking') {
+      // Wait for the current reply to finish before sleeping.
+      wakeTimerRef.current = setTimeout(sleepNow, 2000);
+      return;
+    }
+    setStatus('sleeping');
+  };
+
+  const resetWakeTimer = () => {
+    if (wakeTimerRef.current) clearTimeout(wakeTimerRef.current);
+    wakeTimerRef.current = setTimeout(sleepNow, AWAKE_MS);
+  };
+
+  const handleWakeToggle = () => {
+    if (!supported) return;
+
+    if (wakeMode) {
+      stopWakeListening();
+      if (wakeTimerRef.current) clearTimeout(wakeTimerRef.current);
+      setWakeMode(false);
+      if (!listening) setStatus('idle');
+      return;
+    }
+
+    setWakeMode(true);
+    setMicError(null);
+    setStatus('sleeping');
+    resetWakeTimer();
+    startWakeListening({
+      onWake: () => {
+        resetWakeTimer();
+        setStatus('listening');
+      },
+      onCommand: (command) => {
+        setInput(command);
+        sendMessage(command);
+        setInput('');
+        resetWakeTimer(); // stay awake briefly for a follow-up
+      },
+      onError: () => {
+        setWakeMode(false);
+        setMicError(
+          "AURA couldn't start listening. Check that the mic is allowed in the browser, " +
+            "and that you're online (Chrome's speech recognition needs internet)."
+        );
+        setStatus('idle');
+      },
+    });
+  };
+
+  // While wake mode is on, return to 'Sleeping' after a reply finishes.
+  useEffect(() => {
+    if (wakeMode && status === 'idle') {
+      setStatus('sleeping');
+    }
+  }, [wakeMode, status, setStatus]);
+
+  // Cleanup continuous listening on unmount.
+  useEffect(() => {
+    return () => {
+      stopWakeListening();
+      if (wakeTimerRef.current) clearTimeout(wakeTimerRef.current);
+    };
+  }, [stopWakeListening]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -18,6 +105,40 @@ export default function Home() {
     if (!text || status === 'thinking') return;
     sendMessage(text);
     setInput('');
+  };
+
+  const handleMicClick = () => {
+    setMicError(null);
+    if (!supported || status === 'thinking') return;
+
+    // While wake mode is on, the mic button turns wake listening off instead.
+    if (wakeMode) {
+      handleWakeToggle();
+      return;
+    }
+
+    if (listening) {
+      stopListening();
+      setListening(false);
+      setStatus('idle');
+      return;
+    }
+
+    setListening(true);
+    setStatus('listening');
+    startListening(
+      (transcript) => {
+        setInput(transcript); // briefly show what was heard
+        sendMessage(transcript);
+        setInput(''); // clear the input box after sending
+      },
+      () => {
+        // Fired when recognition ends (after a result or on error).
+        setListening(false);
+        const current = useChatStore.getState().status;
+        setStatus(current === 'thinking' ? current : 'idle');
+      }
+    );
   };
 
   const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES.idle;
@@ -38,15 +159,58 @@ export default function Home() {
 
       {/* Input box */}
       <footer className="px-8 pb-6 pt-2">
+        {micError && (
+          <p className="mb-2 text-xs font-medium text-red-400">{micError}</p>
+        )}
         <form
           onSubmit={handleSubmit}
           className="flex items-center gap-3 rounded-2xl border border-aura-border bg-aura-surface px-4 py-3 transition-colors focus-within:border-aura-primary"
         >
+          {/* Wake word toggle */}
+          <button
+            type="button"
+            onClick={handleWakeToggle}
+            disabled={!supported}
+            aria-pressed={wakeMode}
+            title={
+              wakeMode
+                ? 'Wake word is on — click to turn off'
+                : 'Wake word is off — click to turn on (say “Hello” to wake)'
+            }
+            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors ${
+              wakeMode
+                ? 'border border-green-500/40 bg-green-500/15 text-green-400'
+                : 'border border-transparent bg-aura-surface-light text-aura-text-secondary hover:text-white'
+            } disabled:cursor-not-allowed disabled:opacity-40`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M12 3a9 9 0 100 18 7 7 0 010-14 9 9 0 000-4z" />
+            </svg>
+            {wakeMode ? 'Wake: On' : 'Wake'}
+          </button>
+
+          <MicrophoneButton
+            listening={listening}
+            onClick={handleMicClick}
+            disabled={!supported || status === 'thinking'}
+          />
           <input
             type="text"
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder="Type a message…"
+            placeholder={
+              !supported
+                ? 'Type a message… (microphone not supported in this browser)'
+                : wakeMode
+                  ? 'Wake mode on — say “Hello” to wake up…'
+                  : 'Type a message or click the mic…'
+            }
             className="min-w-0 flex-1 bg-transparent text-[15px] text-white placeholder:text-aura-text-secondary focus:outline-none"
           />
           <button

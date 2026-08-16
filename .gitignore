@@ -1,6 +1,7 @@
 # Backend
 backend/venv/
 backend/.env
+backend/static/audio/
 __pycache__/
 *.pyc
 *.pyo

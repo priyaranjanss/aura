@@ -10,12 +10,12 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 
 | Feature | Status |
 |---------|--------|
-| Speak commands using the laptop microphone | ⬜ Phase 5 |
+| Speak commands using the laptop microphone | ✅ Phase 5 |
 | Text input as alternative to voice | ✅ Phase 2 |
-| High-quality natural Text-to-Speech replies | ⬜ Phase 5 |
-| Real-time status feedback (Listening → Thinking → Speaking) | ⬜ Phase 5 |
-| Support for continuous conversation | ⬜ Phase 4 |
-| Optional wake word ("Hey Aura") | 🔮 Future |
+| High-quality natural Text-to-Speech replies | ✅ Phase 5 (edge-tts) |
+| Real-time status feedback (Listening → Thinking → Speaking) | ✅ Phase 5 |
+| Support for continuous conversation | ✅ Phase 4 |
+| Wake word ("Hello" / "Hey AURA" / etc.) + auto-sleep | ✅ Phase 5 (Wake toggle, continuous listening) |
 
 ---
 
@@ -79,9 +79,9 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 |---------|--------|
 | Clean modern dark theme | ✅ Phase 1 |
 | Chat-style message bubbles (User + Assistant) | ✅ Phase 2 |
-| Large animated microphone button | ⬜ Phase 5 |
+| Large animated microphone button | ✅ Phase 5 |
 | Text input box with send button | ✅ Phase 2 |
-| Live status indicator with colors | 🚧 Phase 2 (Thinking) · ⬜ Phase 5 (Listening/Speaking) |
+| Live status indicator with colors | ✅ Phase 5 (Listening/Thinking/Speaking/Idle) |
 | Scrollable chat history | ✅ Phase 2 |
 
 ### Extra UI Elements
@@ -165,5 +165,6 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | v1.2 | 2026-08-16 | Marked Phase 3 system commands as done (apps, websites, search, time/date). |
 | v1.3 | 2026-08-16 | Added request-analysis feature (all question dimensions answered before the reply). |
 | v1.4 | 2026-08-16 | Marked Phase 4 AI features as done (Groq provider, context, structured analysis). |
+| v1.5 | 2026-08-16 | Marked Phase 5 voice features as done (mic STT, edge-tts TTS, status pill). |
 
 ---

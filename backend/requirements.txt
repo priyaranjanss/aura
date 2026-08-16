@@ -4,4 +4,5 @@ python-dotenv
 pydantic
 requests
 pyautogui
+edge-tts
 

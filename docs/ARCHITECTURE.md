@@ -76,7 +76,7 @@ aura-assistant/
 │   │   ├── components/
 │   │   │   ├── ChatBubble.jsx         # ✅ Built — one message bubble (Phase 2)
 │   │   │   ├── ChatWindow.jsx         # ✅ Built — scrollable message list (Phase 2)
-│   │   │   ├── MicrophoneButton.jsx   # Voice input button (Phase 5)
+│   │   │   ├── MicrophoneButton.jsx   # ✅ Built — voice input button (Phase 5)
 │   │   │   ├── Sidebar.jsx            # ✅ Built (Phase 1)
 │   │   │   ├── StatusBar.jsx          # Listening/Thinking/Speaking (Phase 5)
 │   │   │   ├── QuickCommands.jsx      # Shortcut buttons (Phase 6)
@@ -86,7 +86,7 @@ aura-assistant/
 │   │   ├── services/
 │   │   │   └── api.js                 # ✅ Built — axios calls to backend (Phase 2)
 │   │   ├── hooks/
-│   │   │   └── useSpeech.js           # Web Speech API wrapper (Phase 5)
+│   │   │   └── useSpeech.js           # ✅ Built — Web Speech API wrapper (Phase 5)
 │   │   ├── store/
 │   │   │   └── chatStore.js           # ✅ Built — Zustand store for messages (Phase 2)
 │   │   ├── App.jsx                    # ✅ Built — layout (Phase 1)
@@ -110,7 +110,7 @@ aura-assistant/
 │   │   │   ├── __init__.py
 │   │   │   ├── ai_service.py          # ✅ Built — AI calls, provider-agnostic (Phase 4)
 │   │   │   ├── command_service.py     # ✅ Built — intent detection (Phase 3)
-│   │   │   ├── speech_service.py      # edge-tts audio (Phase 5)
+│   │   │   ├── speech_service.py      # ✅ Built — edge-tts audio (Phase 5)
 │   │   │   └── system_service.py      # ✅ Built — OS actions (Phase 3)
 │   │   └── models/
 │   │       └── schemas.py             # ✅ Built — Pydantic models (Phase 2)
@@ -286,6 +286,7 @@ Loaded from `backend/.env` by `config.py` (gitignored; template in `.env.example
 | v1.1 | 2026-08-16 | Marked Phase 2 files as built (chat route, schemas, api.js, chatStore, ChatBubble, ChatWindow). |
 | v1.2 | 2026-08-16 | Marked Phase 3 services as built (command_service, system_service). |
 | v1.3 | 2026-08-16 | Marked ai_service as built (Groq provider, structured replies). |
+| v1.4 | 2026-08-16 | Marked Phase 5 files as built (speech_service, MicrophoneButton, useSpeech). |
 
 ---
 

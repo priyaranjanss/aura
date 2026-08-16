@@ -95,7 +95,7 @@ def open_app(name: str) -> dict:
                 subprocess.Popen([_APPS[key]["Linux"]])
             return {
                 "success": True,
-                "reply": f"Opening {key}.",
+                "reply": f"Opened {key}.",
                 "analysis": {
                     "what": f"Open the '{key}' application",
                     "how": "Launch via the operating system's app launcher",
@@ -121,7 +121,7 @@ def open_app(name: str) -> dict:
             }
         return {
             "success": True,
-            "reply": f"Opening {name}.",
+            "reply": f"Opened {name}.",
             "analysis": {
                 "what": f"Open the '{name}' application",
                 "how": "Launch via the operating system's app launcher",
@@ -155,7 +155,7 @@ def open_website(key: str) -> dict:
             raise RuntimeError("webbrowser.open returned False")
         return {
             "success": True,
-            "reply": f"Opening {key}.",
+            "reply": f"Opened {key}.",
             "analysis": {
                 "what": f"Open the '{key}' website",
                 "how": "Open the URL in the default browser",
@@ -265,7 +265,7 @@ def open_website_in_browser(key: str, browser: str) -> dict:
             same_tab = " (same tab)" if mode == "tab" else ""
             return {
                 "success": True,
-                "reply": f"Opening {key} in {browser}.{same_tab}",
+                "reply": f"Opened {key} in {browser}.{same_tab}",
                 "analysis": {
                     "what": f"Open the '{key}' website in {browser}",
                     "how": "Open the URL in the browser",
@@ -275,7 +275,7 @@ def open_website_in_browser(key: str, browser: str) -> dict:
         webbrowser.open(url)  # fallback: default browser
         return {
             "success": True,
-            "reply": f"Opening {key} in the default browser.",
+            "reply": f"Opened {key} in the default browser.",
             "analysis": {
                 "what": f"Open the '{key}' website",
                 "how": "Open the URL in the default browser",
@@ -374,7 +374,7 @@ def close_app(name: str) -> dict:
             }
         return {
             "success": True,
-            "reply": f"Closing {name}.",
+            "reply": f"Closed {name}.",
             "analysis": {
                 "what": f"Close the '{name}' application",
                 "how": "Request a graceful quit via the OS",
@@ -382,6 +382,183 @@ def close_app(name: str) -> dict:
         }
     except Exception as e:  # noqa: BLE001
         return _fail("close", name, e)
+
+
+def _minimize_windows_process(exe_name: str, display_name: str = "") -> bool:
+    """Minimize every visible top-level window of an app (Windows).
+
+    Two matching strategies, so both classic and UWP (Store) apps work:
+    - Process image name prefix match ("notepad" -> notepad.exe,
+      "calc" -> CalculatorApp.exe).
+    - ApplicationFrameHost windows by title (UWP apps like Calculator host
+      their visible window in ApplicationFrameHost.exe, whose title is the
+      app name).
+    Returns True if at least one window was minimized.
+    """
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+
+        SW_MINIMIZE = 6
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        wanted = exe_name.lower()
+        wanted_title = display_name.strip().lower()
+
+        targets = []
+        found = []
+
+        WNDENUMPROC = ctypes.WINFUNCTYPE(
+            wintypes.BOOL, wintypes.HWND, wintypes.LPARAM
+        )
+        user32.EnumWindows.argtypes = [WNDENUMPROC, wintypes.LPARAM]
+        user32.GetWindowThreadProcessId.argtypes = [
+            wintypes.HWND, ctypes.POINTER(wintypes.DWORD)
+        ]
+        kernel32.OpenProcess.argtypes = [
+            wintypes.DWORD, wintypes.BOOL, wintypes.DWORD
+        ]
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel32.QueryFullProcessImageNameW.argtypes = [
+            wintypes.HANDLE, wintypes.DWORD,
+            wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD),
+        ]
+
+        @WNDENUMPROC
+        def callback(hwnd, _lparam):
+            found.append(hwnd)
+            return True
+
+        user32.EnumWindows(callback, 0)
+
+        for hwnd in found:
+            if not user32.IsWindowVisible(hwnd):
+                continue
+            pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            handle = kernel32.OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION, False, pid.value
+            )
+            if not handle:
+                continue
+            try:
+                size = wintypes.DWORD(512)
+                buf = ctypes.create_unicode_buffer(512)
+                if kernel32.QueryFullProcessImageNameW(
+                    handle, 0, buf, ctypes.byref(size)
+                ):
+                    exe = buf.value.rsplit("\\", 1)[-1].lower()
+                    if exe == f"{wanted}.exe" or exe.startswith(wanted):
+                        targets.append(hwnd)
+                        continue
+                    # UWP apps: the visible window lives in the frame host.
+                    if wanted_title and exe == "applicationframehost.exe":
+                        title = ctypes.create_unicode_buffer(512)
+                        user32.GetWindowTextW(hwnd, title, 512)
+                        if wanted_title in title.value.lower():
+                            targets.append(hwnd)
+            finally:
+                kernel32.CloseHandle(handle)
+
+        for hwnd in targets:
+            user32.ShowWindow(hwnd, SW_MINIMIZE)
+        return bool(targets)
+    except Exception:  # noqa: BLE001 - best effort
+        return False
+
+
+def minimize_app(name: str) -> dict:
+    """Minimize (not close) a running application's window."""
+    if not _APP_NAME_RE.match(name):
+        return {
+            "success": False,
+            "reply": f"I can't minimize '{name}' - that doesn't look like an app name.",
+            "analysis": {"what": f"Minimize '{name}'", "how": "Rejected: invalid app name"},
+        }
+    try:
+        if SYSTEM == "Windows":
+            # 1) Reliable path: minimize by process name (own ctypes
+            #    implementation). pygetwindow 0.0.9 is flaky on 64-bit
+            #    Python 3.13+ (intermittent WinFunctionType TypeError), so it
+            #    is only a last-resort fallback below. Also try the known-app
+            #    launcher name ("minimize calculator" -> calc.exe).
+            candidates = {name.lower()}
+            key = name.lower()
+            if key in _APPS:
+                candidates.add(_APPS[key]["Windows"].lower())
+            for candidate in candidates:
+                if _minimize_windows_process(candidate, display_name=name):
+                    return {
+                        "success": True,
+                        "reply": f"Minimized {name}.",
+                        "analysis": {
+                            "what": f"Minimize the '{name}' application",
+                            "how": "Minimize the app's window via the OS",
+                        },
+                    }
+            # 2) Best-effort fallback: title matching via pygetwindow
+            #    (bundled with pyautogui). Fully wrapped because it can raise
+            #    intermittently on newer Pythons.
+            try:
+                import pyautogui
+
+                windows = pyautogui.getWindowsWithTitle(name)
+                for window in windows:
+                    try:
+                        window.minimize()
+                    except Exception:  # noqa: BLE001
+                        pass
+                if windows:
+                    return {
+                        "success": True,
+                        "reply": f"Minimized {name}.",
+                        "analysis": {
+                            "what": f"Minimize the '{name}' application",
+                            "how": "Minimize the app's window via the OS",
+                        },
+                    }
+            except Exception:  # noqa: BLE001 - pygetwindow can crash; ignore
+                pass
+            return {
+                "success": False,
+                "reply": f"I couldn't find the {name} window to minimize.",
+                "analysis": {
+                    "what": f"Minimize the '{name}' application",
+                    "how": "App window not found",
+                },
+            }
+        if SYSTEM == "Darwin":
+            result = subprocess.run(
+                [
+                    "osascript",
+                    "-e",
+                    f'tell application "System Events" to tell process "{name}" '
+                    "to set miniaturized of every window to true",
+                ],
+                capture_output=True,
+                timeout=20,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "reply": f"I couldn't find the {name} window to minimize.",
+                    "analysis": {"what": f"Minimize '{name}'", "how": "App window not found"},
+                }
+            return {
+                "success": True,
+                "reply": f"Minimized {name}.",
+                "analysis": {"what": f"Minimize the '{name}' application", "how": "Minimize via AppleScript"},
+            }
+        return {
+            "success": False,
+            "reply": "Minimizing apps isn't supported on Linux yet.",
+            "analysis": {"what": f"Minimize '{name}'", "how": "Not supported on Linux"},
+        }
+    except Exception as e:  # noqa: BLE001
+        return _fail("minimize", name, e)
 
 
 def open_target(name: str) -> dict:
@@ -403,9 +580,9 @@ def search_google(query: str, browser: str = "") -> dict:
         mode = _open_url_with_browser(url, browser) if browser else ""
         if not mode and not webbrowser.open(url):
             raise RuntimeError("webbrowser.open returned False")
-        reply = f"Searching Google for '{query}'."
+        reply = f"Searched Google for '{query}'."
         if browser:
-            reply = f"Searching Google for '{query}' in {browser}."
+            reply = f"Searched Google for '{query}' in {browser}."
         if mode == "tab":
             reply += " (same tab)"
         return {
@@ -429,9 +606,9 @@ def search_youtube(query: str, action: str = "search", browser: str = "") -> dic
             raise RuntimeError("webbrowser.open returned False")
         playing = action == "play"
         if playing:
-            reply = f"Playing '{query}' on YouTube."
+            reply = f"Played '{query}' on YouTube."
         else:
-            reply = f"Searching YouTube for '{query}'."
+            reply = f"Searched YouTube for '{query}'."
         if browser:
             reply = f"{reply} (in {browser})"
         if mode == "tab":
@@ -456,7 +633,7 @@ def search_wikipedia(query: str) -> dict:
             raise RuntimeError("webbrowser.open returned False")
         return {
             "success": True,
-            "reply": f"Searching Wikipedia for '{query}'.",
+            "reply": f"Searched Wikipedia for '{query}'.",
             "analysis": {
                 "what": f"Search Wikipedia for '{query}'",
                 "how": "Open the Wikipedia search URL in the default browser",

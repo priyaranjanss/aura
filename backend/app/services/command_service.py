@@ -13,6 +13,7 @@ from app.services import system_service
 _AI_ACTIONS = {
     "open_app",
     "close_app",
+    "minimize_app",
     "type_text",
     "open_website",
     "open_website_in_browser",
@@ -49,6 +50,9 @@ def execute_ai_command(command: dict):
         return system_service.open_app(target)
     if action == "close_app":
         return system_service.close_app(target)
+    if action == "minimize_app":
+        target = target or str(command.get("app", "")).strip()
+        return system_service.minimize_app(target)
     if action == "type_text":
         app = str(command.get("app", "")).strip()
         return system_service.type_text(target, app=app)
@@ -71,6 +75,28 @@ def execute_ai_command(command: dict):
     return None
 
 
+def execute_ai_steps(steps: list):
+    """Execute a list of AI-suggested commands in order (each validated).
+
+    Compound requests like "open notepad and minimize it" become multiple
+    steps. Each step is validated against the safe list; invalid steps are
+    skipped. A short pause between steps lets the previous one finish
+    (e.g. the window must exist before it can be minimized).
+    """
+    if not isinstance(steps, list):
+        return []
+    results = []
+    for i, step in enumerate(steps):
+        result = execute_ai_command(step)
+        if result is not None:
+            results.append(result)
+            if i < len(steps) - 1:
+                import time
+
+                time.sleep(0.8)
+    return results
+
+
 def handle(message: str):
     """Return a command result dict, or None if the message isn't a command."""
     msg = message.strip().lower()
@@ -87,6 +113,14 @@ def handle(message: str):
         if target.startswith("the "):
             target = target[4:].strip()
         return system_service.close_app(target)
+
+    # --- Minimize something ("minimize notepad", "minimise brave") ---
+    m = re.match(r"^(?:please\s+)?(?:minimize|minimise)\s+(.+)$", msg)
+    if m:
+        target = m.group(1).strip()
+        if target.startswith("the "):
+            target = target[4:].strip()
+        return system_service.minimize_app(target)
 
     # --- Time & date ---------------------------------------------------
     if re.search(r"(what|current|tell)[^.]{0,15}time", msg) or msg in {"time", "the time"}:

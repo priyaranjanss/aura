@@ -1,8 +1,12 @@
 // API service — all backend calls go through this module.
 import axios from 'axios';
 
+// Backend origin. The API and TTS audio live here; responses carry relative
+// audio paths (/static/audio/...), which callers absolutize against this.
+export const API_BASE_URL = 'http://127.0.0.1:8001';
+
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8001',
+  baseURL: API_BASE_URL,
   timeout: 30000,
 });
 
@@ -18,4 +22,13 @@ export async function sendChatMessage(message, history = []) {
     history: history.map((m) => ({ role: m.role, content: m.content })),
   });
   return data;
+}
+
+/**
+ * Tell the backend the audio file was played so it can delete it.
+ * @param {string} audioUrl - the audio_url from a chat reply
+ */
+export async function deleteAudioFile(audioUrl) {
+  const filename = audioUrl.split('/').pop();
+  await api.delete(`/api/audio/${filename}`);
 }

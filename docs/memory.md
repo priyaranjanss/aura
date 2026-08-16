@@ -151,6 +151,52 @@ venv (`python run.py` without activating the venv). Dependencies must exist in
 whichever Python runs the server — installed pyautogui into the system Python
 too.
 
+**Multi-step commands (same day):** the AI now returns a `steps` array (one
+object per action) instead of a single command, so compound requests work:
+"open notepad and minimize it" → [open_app notepad, minimize_app notepad],
+executed in order with a 0.8s pause. New `minimize_app` action: Windows via
+ctypes EnumWindows (process-name prefix match, plus ApplicationFrameHost
+by-title match for UWP apps like Calculator; pygetwindow 0.0.9 is flaky on
+64-bit Python 3.13+ with an intermittent WinFunctionType TypeError, so it is
+only a last-resort fallback), macOS via AppleScript. Keyword fallback also got
+"minimize/minimise X". Verified: open notepad and minimize it → "Opening
+notepad. Minimizing notepad." (live), minimize notepad + minimize calculator
+5/5 stable.
+
+## Phase 5 – Voice Features ✅ (completed)
+
+**Goal:** Full voice interaction (speak to AURA, it speaks back).
+
+**Completed:**
+- Frontend STT: `hooks/useSpeech.js` (Web Speech API), `MicrophoneButton.jsx`
+  (pulsing green while listening). Mic wired in `Home.jsx`; transcript is shown
+  in the input and sent; text input still works if the mic is blocked.
+- Backend TTS: `services/speech_service.py` (edge-tts, free neural voices),
+  audio saved to `backend/static/audio/` and served via `/static` mount;
+  `audio_url` attached to every chat reply (`_with_audio` helper), capped at
+  400 chars, graceful None on failure. `edge-tts` installed in venv AND system
+  python (server runs on system python).
+- Status pill: Listening (green) / Thinking (amber) / Speaking (indigo) / Idle.
+  Store auto-plays `audio_url` and sets Speaking while it plays.
+- Verified: TTS generates mp3 (39KB), too-long text -> None, chat reply
+  includes audio_url, GET /static/audio/*.mp3 -> 200 audio/mpeg, frontend builds.
+
+**Wake word + sleep (same day, Phase 5 bonus):** a **Wake** toggle in the input
+bar enables continuous listening (Web Speech API, `continuous: true`,
+interimResults). While "Sleeping", AURA waits for a wake phrase — "Hello"
+(or "Hello AURA", "Hey", "Hi", "Hey AURA", "Okay AURA"); on wake it
+listens for the next utterance (final result only, wake phrase stripped) as
+the command, then sleeps again after ~8s of idle (waits for
+thinking/speaking to finish). Mic is held open the whole time wake mode is
+on. Browser dropping the mic is handled with an auto-restart.
+
+**Notes / next phase (Phase 6 – Advanced UI & Polish):**
+- Quick command buttons, Settings panel, Clear Chat button
+- Volume control + screenshot (pyautogui), confirmation for dangerous actions
+- Multilingual, animations, demo script
+
+---
+
 **Same-tab browsing (same day):** launching a browser with a URL always opens a
 new tab. Follow-ups in the SAME browser now navigate the current tab instead:
 `_open_url_with_browser` tracks the last browser used and, on a same-browser
@@ -212,6 +258,21 @@ browser window is the one that gets navigated.
 
 ---
 
+## Wake mode fix (2026-08-16)
+
+- **Wake listening no longer fails silently.** Previously, `recognition.start()`
+  could throw synchronously (mic permission denied) and Chrome's speech
+  recognition could fail with a `network` error (it streams audio to Google's
+  servers, so it needs internet) — both were swallowed, so the UI showed
+  "Sleeping…" but never listened, with zero feedback.
+- Now any real failure (`not-allowed`, `service-not-allowed`, `network`,
+  `audio-capture`, or a sync throw) stops wake mode and shows a red error
+  message telling the user to check mic permission and internet.
+- While wake mode is on, the status pill returns to "Sleeping… say 'Hello'"
+  after each reply finishes (it was showing "Idle").
+
+---
+
 ## Project Conventions (2026-08-16)
 
 - **No emojis in frontend code or UI text** — use SVG icons / text labels.
@@ -243,3 +304,8 @@ PHASES, DESIGN, FEATURES, API, DEVELOPMENT, and this file.
 | v1.6 | 2026-08-16 | Logged provider-agnostic AI service (gemini/openai/ollama). |
 | v1.7 | 2026-08-16 | Logged request-analysis feature (all question dimensions answered first). |
 | v1.8 | 2026-08-16 | Logged Phase 4 (AI integration with Groq provider + structured replies). |
+| v1.9 | 2026-08-16 | Logged Phase 5 (voice: STT + edge-tts TTS + status pill). |
+| v1.10 | 2026-08-16 | Logged wake word ("Hey AURA") + auto-sleep toggle. |
+| v1.11 | 2026-08-16 | Wake word changed to "Hello" (+ variants) per user request. |
+| v1.12 | 2026-08-16 | TTS audio deleted after playback: DELETE /api/audio/{filename} (validated) + 1h orphan sweep. Also fixed relative audio_url not playing in dev (absolutized against backend base; strong ref kept). |
+| v1.13 | 2026-08-16 | Command replies use "done" format ("Opened notepad.") instead of "doing" ("Opening notepad."). |

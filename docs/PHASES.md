@@ -26,7 +26,7 @@ Complete one phase fully before moving to the next.
 | 2     | Dashboard & Core Chat       | ✅ Done             | 2026-08-16 |
 | 3     | System Commands             | ✅ Done             | 2026-08-16 |
 | 4     | AI Integration              | ✅ Done             | 2026-08-16 |
-| 5     | Voice Features              | ⬜ Not started      | — |
+| 5     | Voice Features              | ✅ Done             | 2026-08-16 |
 | 6     | Advanced UI & Polish        | ⬜ Not started      | — |
 
 > Keep this table updated. Details of completed work live in `docs/memory.md`.
@@ -126,16 +126,16 @@ Complete one phase fully before moving to the next.
 
 ---
 
-## Phase 5: Voice Features
+## Phase 5: Voice Features ✅
 
 **Goal:** Full voice interaction.
 
 **Tasks:**
-- [ ] Add Microphone button
-- [ ] Use Web Speech API for Speech-to-Text
-- [ ] Integrate `edge-tts` for Text-to-Speech
-- [ ] Show live status (Listening / Thinking / Speaking)
-- [ ] Play audio reply automatically
+- [x] Add Microphone button
+- [x] Use Web Speech API for Speech-to-Text
+- [x] Integrate `edge-tts` for Text-to-Speech
+- [x] Show live status (Listening / Thinking / Speaking)
+- [x] Play audio reply automatically
 
 **Deliverable:** You can fully talk to AURA and it talks back.
 
@@ -216,6 +216,7 @@ Complete one phase fully before moving to the next.
 | v1.1 | 2026-08-16 | Marked Phase 2 complete (chat wired frontend ↔ backend). |
 | v1.2 | 2026-08-16 | Marked Phase 3 complete (system commands: apps, websites, search, time/date). |
 | v1.3 | 2026-08-16 | Marked Phase 4 complete (AI integration with Groq provider). |
+| v1.4 | 2026-08-16 | Marked Phase 5 complete (voice: STT via Web Speech API, TTS via edge-tts). |
 
 ---
 

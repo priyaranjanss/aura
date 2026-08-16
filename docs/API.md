@@ -75,7 +75,7 @@ Send a user message (from voice or text). Every message is first analyzed by the
 | `reply` | string | The assistant's text reply (shown and/or spoken) |
 | `type` | string | `"command"` (system action) or `"ai"` (AI reply) |
 | `success` | boolean | Whether the action/reply succeeded |
-| `audio_url` | string \| null | URL to TTS audio (Phase 5; `null` until then) |
+| `audio_url` | string \| null | URL to TTS audio (edge-tts mp3 served from `/static/audio/`); `null` when speech is skipped (e.g. reply too long or TTS offline) |
 | `analysis` | array | Request analysis shown before the reply: `{question, answer}` pairs for What/When/Who/How/Where/Why/Which/Whose/Whom/How much — each answered or `"Not needed"` |
 
 **Example (curl)**
@@ -94,6 +94,8 @@ These are examples of messages the backend understands (live since Phase 3):
 | User Message                  | Action                          |
 |-------------------------------|---------------------------------|
 | open chrome                   | Opens Google Chrome             |
+| open notepad and minimize it  | Opens Notepad, then minimizes it (multi-step) |
+| minimize notepad              | Minimizes Notepad (also "minimise X") |
 | close brave                   | Closes Brave (also "quit/exit X") |
 | write hello                   | Types "hello" into the active app (context-aware) |
 | open notepad                  | Opens Notepad                   |
@@ -136,7 +138,26 @@ Returns current backend status and loaded services.
 
 ---
 
-## 5. WebSocket (Future / Advanced)
+## 5. Delete Audio (after playback)
+
+**DELETE** `/api/audio/{filename}`
+
+Deletes a generated TTS file once the frontend has played it, so the audio
+folder stays clean. The frontend calls this automatically when playback ends
+(or fails).
+
+| Case | Result |
+|------|--------|
+| Valid generated file (32-hex + `.mp3`) | `200` → `{"deleted": true}` |
+| Unknown / already-deleted file | `404` |
+| Anything else (path traversal, arbitrary names) | `404` (strictly validated) |
+
+Orphaned files (e.g. a tab closed mid-playback) are swept automatically when
+a new file is generated (files older than 1 hour).
+
+---
+
+## 6. WebSocket (Future / Advanced)
 
 **WS** `/ws/status`
 
@@ -146,7 +167,7 @@ Used for real-time status updates (Listening, Thinking, Speaking).
 
 ---
 
-## 6. Error Response Format
+## 7. Error Response Format
 
 ```json
 {
@@ -168,7 +189,7 @@ Used for real-time status updates (Listening, Thinking, Speaking).
 
 ---
 
-## 7. CORS
+## 8. CORS
 
 The backend enables CORS for **any origin** (`allow_origins=["*"]`) during
 development. This is safe because the server binds to `127.0.0.1` only, so

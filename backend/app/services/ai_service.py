@@ -40,26 +40,32 @@ SYSTEM_PROMPT = (
     "You can only request these actions (Python code executes them, you never touch the system): "
     "- open_app (target = installed app name, e.g. chrome, notepad) "
     "- close_app (target = installed app name, e.g. brave, notepad) "
+    "- minimize_app (target = running app name, e.g. notepad, brave) "
     "- type_text (target = the text to type, app = the app to type into, usually inherited) "
     "- open_website (target = a known website: google, youtube, gmail, wikipedia, github, "
     "stack overflow, maps, news — or a plain http(s) URL) "
     "- open_website_in_browser (target = website as above, browser = brave, chrome, firefox, edge, default) "
     "- search_google / search_youtube / search_wikipedia (target = the search query) "
     "- tell_time / tell_date "
-    "If the request is not one of these actions, set command to null and answer normally. "
+    "If the request is not one of these actions, set steps to an empty array and answer normally. "
+    "Compound requests get MULTIPLE steps, one action per step. For example \"open notepad "
+    "and minimize it\" becomes two steps: first {action: open_app, target: notepad}, then "
+    "{action: minimize_app, target: notepad}. Repeat the app/site name explicitly in every "
+    "step — never use words like \"it\", \"that\", or \"there\" as a target. "
     'Respond with ONLY valid JSON in exactly this shape: '
     '{"analysis": {"what": "...", "when": "...", "who": "...", "how": "...", '
     '"where": "...", "why": "...", "which": "...", "whose": "...", "whom": "...", '
     '"how much": "..."}, '
-    '"command": {"action": "...", "target": "...", "app": "...", "browser": "..."} or null, '
+    '"steps": [{"action": "...", "target": "...", "app": "...", "browser": "..."}] '
+    '(empty array when no command), '
     '"reply": "..."}. The reply is a short confirmation for commands '
-    '(e.g. "Opening YouTube in Brave.") and a full answer for conversations. '
+    '(e.g. "Opened YouTube in Brave.") and a full answer for conversations. '
     "Do not include any text outside the JSON."
 )
 
 
 def _parse_structured(text: str) -> dict:
-    """Extract {"reply", "analysis", "command"} from the model output.
+    """Extract {"reply", "analysis", "command", "steps"} from the model output.
 
     Falls back to the raw text when the model does not return valid JSON.
     """
@@ -80,19 +86,34 @@ def _parse_structured(text: str) -> dict:
                 data = None
 
     if not isinstance(data, dict):
-        return {"reply": text.strip(), "analysis": None, "command": None}
+        return {"reply": text.strip(), "analysis": None, "command": None, "steps": None}
 
     reply = data.get("reply")
     analysis = data.get("analysis")
     command = data.get("command")
     if not reply:
-        return {"reply": text.strip(), "analysis": None, "command": None}
+        return {"reply": text.strip(), "analysis": None, "command": None, "steps": None}
     if not isinstance(analysis, dict):
         analysis = None
     if not isinstance(command, dict):
         command = None
 
-    return {"reply": str(reply).strip(), "analysis": analysis, "command": command}
+    # Steps array (compound commands). Falls back to a single "command" for
+    # older-model responses.
+    steps = data.get("steps")
+    if isinstance(steps, list):
+        steps = [s for s in steps if isinstance(s, dict)] or None
+    else:
+        steps = None
+    if steps is None and command is not None:
+        steps = [command]
+
+    return {
+        "reply": str(reply).strip(),
+        "analysis": analysis,
+        "command": command,
+        "steps": steps,
+    }
 
 
 class AIProvider(ABC):
