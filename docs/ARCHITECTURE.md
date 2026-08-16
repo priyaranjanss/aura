@@ -33,27 +33,26 @@ Return response + optional audio
 Frontend shows reply + speaks it
 ```
 
-### Detailed Components
+### Request Lifecycle (Step by Step)
 
-**Frontend Responsibilities**
-- Display chat interface
-- Capture voice using Web Speech API
-- Send messages to backend
-- Show live status
-- Play Text-to-Speech audio
-- Manage chat history in UI
+1. **Capture** — The user types or speaks a message in the frontend.
+2. **Send** — `services/api.js` (axios) POSTs `{ "message": "...", "history": [...] }` to `POST http://127.0.0.1:8001/api/chat`.
+3. **Receive** — FastAPI route (`routes/chat.py`) validates the body with Pydantic (`models/schemas.py`).
+4. **Route** — `command_service.py` decides: is this a known system command?
+   - **Yes** → `system_service.py` executes the safe-list action (open app, tell time, …).
+   - **No** → `ai_service.py` calls Google Gemini with conversation history.
+5. **Respond** — The backend returns `{ "reply", "type": "command" | "ai", "success", "audio_url" }`.
+6. **Render** — The frontend appends the reply to the Zustand chat store and (Phase 5+) plays the audio.
 
-**Backend Responsibilities**
-- Receive user message
-- Detect intent (command vs conversation)
-- Execute system commands on the laptop
-- Call Google Gemini for intelligent replies
-- Generate speech using edge-tts
-- Return clean JSON response
+### Command vs Conversation Decision
 
-**System Control Layer**
-- Directly interacts with Operating System
-- Uses Python libraries to open apps, control volume, take screenshots, etc.
+| Input | Detected as | Handled by |
+|-------|-------------|------------|
+| "open chrome" | Command | command_service → system_service |
+| "what time is it" | Command | command_service → system_service |
+| "search google for cats" | Command | command_service → webbrowser |
+| "explain black holes" | Conversation | ai_service → Gemini |
+| "tell me a joke" | Conversation | ai_service → Gemini |
 
 ---
 
@@ -66,24 +65,24 @@ aura-assistant/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ChatBubble.jsx
-│   │   │   ├── ChatWindow.jsx
-│   │   │   ├── MicrophoneButton.jsx
-│   │   │   ├── Sidebar.jsx
-│   │   │   ├── StatusBar.jsx
-│   │   │   ├── QuickCommands.jsx
-│   │   │   └── SettingsPanel.jsx
+│   │   │   ├── ChatBubble.jsx         # ✅ Built — one message bubble (Phase 2)
+│   │   │   ├── ChatWindow.jsx         # ✅ Built — scrollable message list (Phase 2)
+│   │   │   ├── MicrophoneButton.jsx   # Voice input button (Phase 5)
+│   │   │   ├── Sidebar.jsx            # ✅ Built (Phase 1)
+│   │   │   ├── StatusBar.jsx          # Listening/Thinking/Speaking (Phase 5)
+│   │   │   ├── QuickCommands.jsx      # Shortcut buttons (Phase 6)
+│   │   │   └── SettingsPanel.jsx      # Settings (Phase 6)
 │   │   ├── pages/
-│   │   │   └── Home.jsx
+│   │   │   └── Home.jsx               # ✅ Built — chat area shell (Phase 1)
 │   │   ├── services/
-│   │   │   └── api.js
+│   │   │   └── api.js                 # ✅ Built — axios calls to backend (Phase 2)
 │   │   ├── hooks/
-│   │   │   └── useSpeech.js
+│   │   │   └── useSpeech.js           # Web Speech API wrapper (Phase 5)
 │   │   ├── store/
-│   │   │   └── chatStore.js
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
+│   │   │   └── chatStore.js           # ✅ Built — Zustand store for messages (Phase 2)
+│   │   ├── App.jsx                    # ✅ Built — layout (Phase 1)
+│   │   ├── main.jsx                   # ✅ Built
+│   │   └── index.css                  # ✅ Built — Tailwind + base styles
 │   ├── package.json
 │   ├── vite.config.js
 │   ├── tailwind.config.js
@@ -92,37 +91,30 @@ aura-assistant/
 ├── backend/                           # Python FastAPI
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py
-│   │   ├── config.py
+│   │   ├── main.py                    # ✅ Built — app, CORS, GET / (Phase 1)
+│   │   ├── config.py                  # ✅ Built — .env settings (Phase 1)
 │   │   ├── routes/
 │   │   │   ├── __init__.py
-│   │   │   ├── chat.py
-│   │   │   └── system.py
+│   │   │   ├── chat.py                # ✅ Built — POST /api/chat (Phase 2)
+│   │   │   └── system.py              # System actions API (Phase 3)
 │   │   ├── services/
 │   │   │   ├── __init__.py
-│   │   │   ├── ai_service.py
-│   │   │   ├── command_service.py
-│   │   │   ├── speech_service.py
-│   │   │   └── system_service.py
+│   │   │   ├── ai_service.py          # Gemini calls (Phase 4)
+│   │   │   ├── command_service.py     # Intent detection (Phase 3)
+│   │   │   ├── speech_service.py      # edge-tts audio (Phase 5)
+│   │   │   └── system_service.py      # OS actions (Phase 3)
 │   │   └── models/
-│   │       └── schemas.py
+│   │       └── schemas.py             # ✅ Built — Pydantic models (Phase 2)
 │   ├── requirements.txt
-│   ├── .env
-│   └── run.py
+│   ├── .env / .env.example
+│   └── run.py                         # ✅ Built — launcher (Phase 1)
 │
 ├── docs/                              # All documentation
-│   ├── PRD.md
-│   ├── Architecture.md
-│   ├── rules.md
-│   ├── phases.md
-│   ├── design.md
-│   ├── SETUP.md
-│   ├── FEATURES.md
-│   └── API.md
-│
 ├── README.md
 └── .gitignore
 ```
+
+> ✅ = already built. Files without ✅ arrive in the phase shown.
 
 ---
 
@@ -135,7 +127,7 @@ aura-assistant/
 | Vite             | Fast build tool                      |
 | Tailwind CSS     | Styling                              |
 | JavaScript (ES6) | Main language                        |
-| Zustand          | State management                       |
+| Zustand          | State management                     |
 | Axios            | API calls                            |
 | Web Speech API   | Speech-to-Text in browser            |
 
@@ -161,9 +153,115 @@ aura-assistant/
 
 ## 4. Communication
 
-- Frontend ↔ Backend → REST API (JSON)
-- Real-time status → WebSocket (optional advanced)
-- All system actions happen only through the Python backend (security)
+- **Frontend ↔ Backend** → REST API (JSON)
+- **Real-time status** → WebSocket `/ws/status` (optional, advanced)
+- **All system actions happen only through the Python backend** (security)
+
+### Example Payloads
+
+**Request** — `POST /api/chat`
+```json
+{
+  "message": "open chrome",
+  "history": [
+    {"role": "user", "content": "hello"},
+    {"role": "assistant", "content": "Hi! How can I help you?"}
+  ]
+}
+```
+
+**Response**
+```json
+{
+  "reply": "Opening Google Chrome for you.",
+  "type": "command",
+  "success": true,
+  "audio_url": null
+}
+```
+
+---
+
+## 5. Module Responsibilities
+
+### Frontend
+| Module | Responsibility |
+|--------|----------------|
+| `App.jsx` | Root layout (sidebar + main area) |
+| `pages/Home.jsx` | Chat area: header, messages, input |
+| `components/ChatWindow.jsx` | Scrollable list of bubbles |
+| `components/ChatBubble.jsx` | Renders one user/assistant message |
+| `components/MicrophoneButton.jsx` | Captures speech via Web Speech API |
+| `components/StatusBar.jsx` | Live Listening/Thinking/Speaking state |
+| `services/api.js` | All axios calls to the backend |
+| `store/chatStore.js` | Zustand: messages, status, actions |
+
+### Backend
+| Module | Responsibility |
+|--------|----------------|
+| `main.py` | App factory, CORS, router mounting |
+| `config.py` | Loads `.env` (HOST, PORT, GEMINI_API_KEY) |
+| `routes/chat.py` | `POST /api/chat` — validates + orchestrates |
+| `services/command_service.py` | Keyword-based intent detection |
+| `services/system_service.py` | Executes safe-list OS actions |
+| `services/ai_service.py` | Calls Gemini with history |
+| `services/speech_service.py` | Generates TTS audio via edge-tts |
+| `models/schemas.py` | Pydantic request/response models |
+
+### System Control Layer
+- Directly interacts with the Operating System
+- Uses Python libraries to open apps, control volume, take screenshots, etc.
+- Every action is wrapped in try-except (never crashes the app)
+
+---
+
+## 6. Error Handling Flow
+
+```
+Route receives request
+        ↓
+Validate (Pydantic) ── fails ──► 422 error JSON
+        ↓
+Intent detection ── error ──► friendly reply, success=false
+        ↓
+System command ── exception ──► "Sorry, I couldn't do that." + logged error
+        ↓
+Gemini call ── exception ──► fallback reply, success=false
+        ↓
+Return consistent JSON
+```
+
+---
+
+## 7. Configuration
+
+| Variable | Default | Used by |
+|----------|---------|---------|
+| `GEMINI_API_KEY` | empty | ai_service (Phase 4) |
+| `HOST` | `127.0.0.1` | uvicorn bind address |
+| `PORT` | `8001` | uvicorn port |
+
+Loaded from `backend/.env` by `config.py` (gitignored; template in `.env.example`).
+
+---
+
+## 8. Extension Points
+
+- **Add a command** → add a keyword → action entry in `command_service.py` + the action in `system_service.py`.
+- **Add an API route** → create `routes/<name>.py`, include the router in `main.py`, add a Pydantic model in `schemas.py`.
+- **Add a frontend feature** → new component under `components/`, state in `store/chatStore.js`, styles with Tailwind tokens from `docs/DESIGN.md`.
+- **Change ports** → edit `backend/.env` (`PORT`) and `frontend/vite.config.js` (`server.port`).
+
+---
+
+## Version
+
+**v1.0** — Last updated: 2026-08-16
+
+| Version | Date | Notes |
+|---------|------|-------|
+| v1.0 | 2026-08-16 | Expanded: added request lifecycle walkthrough, module responsibility tables, error flow, configuration table, extension points; marked built files with ✅. |
+| v1.1 | 2026-08-16 | Marked Phase 2 files as built (chat route, schemas, api.js, chatStore, ChatBubble, ChatWindow). |
 
 ---
 

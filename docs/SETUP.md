@@ -4,6 +4,27 @@ This guide explains how to install and run the AURA Voice Assistant on your lapt
 
 ---
 
+## Quick Start (TL;DR)
+
+```bash
+# Terminal 1 – Backend
+cd backend
+python -m venv venv
+source venv/Scripts/activate        # Git Bash · venv\Scripts\activate (cmd/PowerShell) · source venv/bin/activate (Mac/Linux)
+pip install -r requirements.txt
+cp .env.example .env
+python run.py                       # → http://127.0.0.1:8001
+
+# Terminal 2 – Frontend
+cd frontend
+npm install
+npm run dev                         # → http://localhost:5173
+```
+
+Everything below explains each step in detail.
+
+---
+
 ## 1. Prerequisites
 
 ### Required Software
@@ -74,6 +95,8 @@ PORT=8001
 
 > `.env` is gitignored — never commit it. Only `.env.example` is tracked.
 
+**Verify:** `pip list` should show `fastapi`, `uvicorn`, `pydantic`, `python-dotenv`.
+
 ### Step 2: Frontend Setup
 
 Open a **new terminal** (or deactivate the venv first):
@@ -82,6 +105,8 @@ Open a **new terminal** (or deactivate the venv first):
 cd frontend
 npm install
 ```
+
+**Verify:** `npm run build` should complete without errors (a `dist/` folder is produced).
 
 ---
 
@@ -114,6 +139,8 @@ see:
 {"status": "online", "message": "Hello from AURA"}
 ```
 
+Interactive API docs (FastAPI auto-generated): **http://127.0.0.1:8001/docs**
+
 ### Start Frontend (Terminal 2)
 
 ```bash
@@ -128,7 +155,20 @@ Open that URL in Chrome. You should see the AURA dark-themed interface
 
 ---
 
-## 5. First Run Checklist
+## 5. Development Workflow (Daily Loop)
+
+After initial setup, your normal working loop is:
+
+1. **Terminal 1:** `cd backend && python run.py` — backend with auto-reload
+2. **Terminal 2:** `cd frontend && npm run dev` — frontend with hot reload
+3. Edit code → save → both servers pick changes up automatically
+4. Test in the browser at http://localhost:5173
+5. Run checks before finishing: `npm run build` (frontend) and `python -c "import app.main"` (backend imports clean)
+6. Commit after each completed phase (see docs/RULES.md git workflow)
+
+---
+
+## 6. First Run Checklist
 
 - [ ] Backend is running without errors
 - [ ] http://127.0.0.1:8001/ shows `"message": "Hello from AURA"`
@@ -139,7 +179,7 @@ Open that URL in Chrome. You should see the AURA dark-themed interface
 
 ---
 
-## 6. Common Issues & Solutions
+## 7. Common Issues & Solutions
 
 | Problem                        | Solution                                      |
 |--------------------------------|-----------------------------------------------|
@@ -148,12 +188,13 @@ Open that URL in Chrome. You should see the AURA dark-themed interface
 | CORS error                     | Make sure backend CORS is enabled             |
 | Module not found               | Activate virtual environment                  |
 | `python run.py` not found      | Make sure you are inside the `backend/` folder |
+| `[WinError 10013]` port error  | Port busy — wait, or `netstat -ano \| findstr :8001` then `taskkill /PID <pid> /F` |
 | Port already in use            | Change port in `.env` or kill previous process |
 | pyautogui not working on Mac   | Give Accessibility permission to Terminal     |
 
 ---
 
-## 7. Folder Structure After Setup
+## 8. Folder Structure After Setup
 
 ```
 aura-assistant/
@@ -182,7 +223,7 @@ aura-assistant/
 
 ---
 
-## 8. Recommended Development Order
+## 9. Recommended Development Order
 
 1. Setup backend + basic FastAPI hello world
 2. Setup React frontend + basic UI
@@ -191,6 +232,17 @@ aura-assistant/
 5. Add Gemini AI
 6. Add speech features
 7. Polish UI
+
+---
+
+## Version
+
+**v1.1** — Last updated: 2026-08-16
+
+| Version | Date | Notes |
+|---------|------|-------|
+| v1.0 | 2026-08-16 | Rewritten to match the real repo (venv, requirements.txt, run.py, .env.example) |
+| v1.1 | 2026-08-16 | Added Quick Start TL;DR, verify steps, development workflow loop, port-8001 troubleshooting |
 
 ---
 
