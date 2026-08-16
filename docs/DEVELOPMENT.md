@@ -21,7 +21,7 @@ This file contains practical development guidelines, coding standards, and the r
 - [ ] Test all basic commands
 
 ### Phase 3 – AI Integration (Day 3)
-- [ ] Integrate Google Gemini
+- [ ] Integrate AI service (default provider: Gemini)
 - [ ] Send conversation history
 - [ ] Handle AI vs Command routing
 - [ ] Improve reply quality
@@ -134,7 +134,7 @@ export const useChatStore = create((set) => ({
 - [ ] `npm run build` passes
 - [ ] Can send text message and receive reply (Phase 2+)
 - [ ] "open chrome" actually opens Chrome (Phase 3+)
-- [ ] Gemini answers general questions (Phase 4+)
+- [ ] AI service answers general questions (Phase 4+)
 - [ ] Microphone permission works (Phase 5+)
 - [ ] Voice is converted to text correctly (Phase 5+)
 - [ ] Assistant speaks the reply (Phase 5+)
@@ -165,7 +165,7 @@ __pycache__/
 ```
 
 **Commit message style:** `type(scope): short summary` — e.g.
-`feat(chat): wire input to POST /api/chat`, `fix(backend): fallback when Gemini key missing`.
+`feat(chat): wire input to POST /api/chat`, `fix(backend): fallback when AI key missing`.
 
 ---
 
@@ -175,7 +175,7 @@ __pycache__/
 2. Prepare a list of commands to show
 3. Show both voice and text input
 4. Demonstrate system control live (open Chrome, tell time, etc.)
-5. Show Gemini answering a smart question
+5. Show the AI answering a smart question
 6. Keep a backup text-only mode ready in case microphone fails
 
 ---

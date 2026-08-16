@@ -44,14 +44,21 @@ npm --version
 
 ---
 
-## 2. Get Google Gemini API Key
+## 2. Get an AI API Key (default: Groq)
 
-1. Go to [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-2. Sign in with your Google account
-3. Click **Create API Key**
-4. Copy the key
+AURA uses a provider-agnostic **AI service** (`AI_PROVIDER` in `.env`). The
+current default is **Groq** (fast, free tier); Gemini, OpenAI, or a local
+Ollama server can be swapped in without changing code.
 
-> **Note:** The key is only used from Phase 4 (Gemini AI) onward. The app runs
+**Groq (default):**
+1. Go to [https://console.groq.com/keys](https://console.groq.com/keys)
+2. Sign in / create a free account
+3. Click **Create API Key**, copy it
+
+**Alternative providers:** Gemini → [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) ·
+OpenAI → platform.openai.com · Ollama → local server (no key)
+
+> **Note:** The key is only used by the AI service (Phase 4). The app runs
 > fine without it during Phase 1–3.
 
 ---
@@ -85,15 +92,21 @@ Create the environment file. A template already exists at `backend/.env.example`
 cp .env.example .env
 ```
 
-Then open `.env` and set your Gemini API key (can be left empty for now):
+Then open `.env` and set your AI API key (can be left empty for now):
 
 ```
-GEMINI_API_KEY=your_actual_api_key_here
+AI_PROVIDER=gemini      # gemini (default), openai, or ollama
+AI_API_KEY=your_actual_api_key_here
+AI_MODEL=               # optional model override
 HOST=127.0.0.1
 PORT=8001
 ```
 
 > `.env` is gitignored — never commit it. Only `.env.example` is tracked.
+
+> **Tip:** if you run `python run.py` WITHOUT activating the venv, the server
+> uses your system Python — install the same requirements there too:
+> `python -m pip install -r requirements.txt`.
 
 **Verify:** `pip list` should show `fastapi`, `uvicorn`, `pydantic`, `python-dotenv`.
 
@@ -162,9 +175,10 @@ After initial setup, your normal working loop is:
 1. **Terminal 1:** `cd backend && python run.py` — backend with auto-reload
 2. **Terminal 2:** `cd frontend && npm run dev` — frontend with hot reload
 3. Edit code → save → both servers pick changes up automatically
-4. Test in the browser at http://localhost:5173
-5. Run checks before finishing: `npm run build` (frontend) and `python -c "import app.main"` (backend imports clean)
-6. Commit after each completed phase (see docs/RULES.md git workflow)
+4. **Important:** uvicorn's auto-reload watches `.py` files **only** — after editing `.env` (e.g. adding/rotating an API key), restart the backend manually: `Ctrl+C` then `python run.py`
+5. Test in the browser at http://localhost:5173
+6. Run checks before finishing: `npm run build` (frontend) and `python -c "import app.main"` (backend imports clean)
+7. Commit after each completed phase (see docs/RULES.md git workflow)
 
 ---
 
@@ -175,7 +189,7 @@ After initial setup, your normal working loop is:
 - [ ] Frontend opens in browser at http://localhost:5173
 - [ ] AURA interface (sidebar + empty chat + input box) is visible
 - [ ] (Later phases) Microphone permission is allowed
-- [ ] (Later phases) Gemini API key is correctly set in `.env`
+- [ ] (Later phases) AI API key is correctly set in `.env`
 
 ---
 
@@ -184,7 +198,7 @@ After initial setup, your normal working loop is:
 | Problem                        | Solution                                      |
 |--------------------------------|-----------------------------------------------|
 | Microphone not working         | Use Chrome + allow permission                 |
-| Gemini API error               | Check API key in `.env`                       |
+| AI API error                   | Check `AI_API_KEY` in `.env`                  |
 | CORS error                     | Make sure backend CORS is enabled             |
 | Module not found               | Activate virtual environment                  |
 | `python run.py` not found      | Make sure you are inside the `backend/` folder |
@@ -229,7 +243,7 @@ aura-assistant/
 2. Setup React frontend + basic UI
 3. Connect frontend to backend
 4. Add system commands
-5. Add Gemini AI
+5. Add AI brain (AI service)
 6. Add speech features
 7. Polish UI
 

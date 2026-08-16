@@ -9,7 +9,7 @@ It features a beautiful React frontend and a powerful Python FastAPI backend. Yo
 ## Key Highlights
 
 - Real computer control (open apps, websites, system actions)
-- Google Gemini powered intelligent conversations
+- AI-powered conversations (Gemini by default, provider-swappable)
 - High-quality Text-to-Speech replies
 - Modern dark-themed React UI
 - Voice + Text input support
@@ -53,7 +53,7 @@ aura-assistant/
 |-------------|-------------------------------------|
 | Frontend    | React 18, Vite, Tailwind CSS, JavaScript, Zustand |
 | Backend     | Python 3.10+, FastAPI, Uvicorn      |
-| AI          | Google Gemini API                   |
+| AI          | Pluggable AI service (Groq active)   |
 | Speech      | Web Speech API + edge-tts           |
 | System Control | os, subprocess, pyautogui, webbrowser |
 
@@ -67,7 +67,7 @@ cd backend
 python -m venv venv
 source venv/Scripts/activate        # Windows Git Bash · venv\Scripts\activate on cmd/PowerShell · source venv/bin/activate on Mac/Linux
 pip install -r requirements.txt
-cp .env.example .env                # optionally add your Gemini key
+cp .env.example .env                # optionally add your AI API key
 python run.py                       # → http://127.0.0.1:8001
 
 # Terminal 2 – frontend
@@ -102,7 +102,7 @@ Full step-by-step instructions: [docs/SETUP.md](docs/SETUP.md)
 - Windows / macOS / Linux laptop
 - Python 3.10 or higher
 - Node.js 18 or higher
-- Google Gemini API key (free) — only needed from Phase 4
+- AI API key (Groq free tier works) — needed for Phase 4 AI
 - Chrome browser (recommended for microphone)
 
 ---

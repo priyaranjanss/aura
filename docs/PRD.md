@@ -21,7 +21,7 @@ It allows the user to:
 The application has two main parts:
 
 1. **Frontend** → Modern React web interface (chat + microphone)
-2. **Backend** → Python FastAPI server that controls the computer and talks to Google Gemini AI
+2. **Backend** → Python FastAPI server that controls the computer and talks to a pluggable AI service (Groq by default)
 
 The entire system runs on the user's own laptop (no cloud deployment needed for core features).
 
@@ -31,7 +31,7 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 |------|---------|
 | AURA | The assistant product as a whole (frontend + backend) |
 | Command | A message that maps to a system action (e.g. "open chrome") |
-| Conversation | A message that should be answered by Gemini AI |
+| Conversation | A message that should be answered by the AI service |
 | Intent Detection | The backend logic that decides command vs conversation |
 | TTS / STT | Text-to-Speech / Speech-to-Text |
 
@@ -44,7 +44,7 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 | Students (CSE / IT)         | College students doing final year projects       | Perfect fullstack + AI + system control project |
 | Developers & Programmers    | People who want hands-free computer control      | Increase productivity while coding          |
 | Productivity Seekers        | Anyone who wants to control PC by voice          | Reduce mouse/keyboard usage                 |
-| AI Enthusiasts              | People learning AI, voice interfaces, LLMs       | Practical hands-on experience with Gemini + Speech |
+| AI Enthusiasts              | People learning AI, voice interfaces, LLMs       | Practical hands-on experience with AI + Speech    |
 | Demo / Presentation Users   | Students presenting projects                     | Impressive live demo of AI controlling PC   |
 
 **Primary Focus:** Computer Science Engineering students who need a complete, impressive, and realistic project.
@@ -52,7 +52,7 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 ### User Stories
 
 - As a **student**, I can open apps and websites by voice so my demo looks impressive.
-- As a **developer**, I can ask general questions and get Gemini answers while keeping my hands on the keyboard.
+- As a **developer**, I can ask general questions and get AI answers while keeping my hands on the keyboard.
 - As a **productivity seeker**, I can control volume, take screenshots, and lock my PC with one command.
 - As an **AI enthusiast**, I can see the full pipeline: voice → intent → AI/system → spoken reply.
 - As a **demo presenter**, I can fall back to typed input if the microphone fails.
@@ -71,7 +71,7 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 | 4 | Open websites                 | Core     | 3     |
 | 5 | Search Google / YouTube / Wikipedia | Core | 3     |
 | 6 | Tell time & date              | Core     | 3     |
-| 7 | Intelligent conversation (Gemini) | Core  | 4     |
+| 7 | Intelligent conversation (AI service) | Core | 4     |
 | 8 | Voice input (Web Speech API)  | Core     | 5     |
 | 9 | Text-to-Speech (edge-tts)     | Core     | 5     |
 | 10 | Real-time status (Listening/Thinking/Speaking) | Core | 5 |
@@ -101,7 +101,7 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 - Tell current time and date
 - Volume control (up / down / mute)
 - Take screenshot
-- Intelligent conversation using Google Gemini
+- Intelligent conversation using the AI service (Gemini by default)
 - Chat history in the UI
 - Real-time status (Listening / Thinking / Speaking)
 - Modern dark-themed React UI
@@ -131,7 +131,7 @@ The entire system runs on the user's own laptop (no cloud deployment needed for 
 The project will be considered successful when:
 
 1. User can control the computer completely by voice
-2. Gemini AI gives intelligent and useful answers
+2. The AI service gives intelligent and useful answers
 3. UI looks modern and professional
 4. System works reliably on a normal laptop
 5. Student can demonstrate all major features live in 5–7 minutes
@@ -141,7 +141,7 @@ The project will be considered successful when:
 | Criterion | Target |
 |-----------|--------|
 | Backend response time (command) | < 500 ms on a normal laptop |
-| Backend response time (Gemini) | < 5 s on free tier |
+| Backend response time (AI)     | < 5 s on free tier |
 | UI load time | < 2 s on localhost |
 | Demo coverage | All Core features shown in 5–7 minutes |
 | Crash resistance | One failed command never crashes the app |
@@ -152,7 +152,7 @@ The project will be considered successful when:
 
 - Must work with only a laptop (no extra hardware)
 - Backend must run locally (for system control)
-- Free tier of Google Gemini should be sufficient
+- Free tier of the default AI provider (Groq) should be sufficient
 - Code should be clean and well-documented for evaluation
 - Backend binds to `127.0.0.1` only (never exposed publicly)
 
@@ -165,7 +165,7 @@ The project will be considered successful when:
 - Local desktop control via a browser-based UI
 - Text and voice input; spoken replies
 - Pre-approved, safe-list system commands only
-- Gemini for conversations and non-command intents
+- AI service for conversations and non-command intents
 
 ### Out of Scope (v1)
 
@@ -183,7 +183,7 @@ The project will be considered successful when:
 | M1 | 1 | Structure + UI shell + "Hello from AURA" API |
 | M2 | 2 | Working text chat between UI and backend |
 | M3 | 3 | System commands (apps, websites, time/date) |
-| M4 | 4 | Gemini-powered answers with context |
+| M4 | 4 | AI-powered answers with context |
 | M5 | 5 | Full voice interaction (speak + hear replies) |
 | M6 | 6 | Polished, demo-ready application |
 
@@ -194,14 +194,14 @@ The project will be considered successful when:
 ### Assumptions
 
 - User has Python 3.10+, Node 18+, and Chrome
-- Gemini free tier is sufficient for demos
+- Default provider free tier (Groq) is sufficient for demos
 - System commands run on the user's own laptop
 
 ### Risks & Mitigations
 
 | Risk | Mitigation |
 |------|------------|
-| Gemini API key missing / quota exceeded | Graceful fallback reply + clear `.env` instructions |
+| AI API key missing / quota exceeded     | Graceful fallback reply + clear `.env` instructions |
 | Microphone blocked by browser | Text input always available |
 | System command fails (app not installed) | try-except + friendly error message |
 | Port 8001/5173 busy | Documented fix in SETUP.md; port configurable via `.env` |

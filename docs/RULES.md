@@ -44,7 +44,7 @@ This document defines clear rules for building AURA so the project stays clean, 
 ### Libraries & Approaches to Avoid
 - Do **not** use Streamlit (we are using React)
 - Do **not** put system control code in the frontend
-- Do **not** hardcode Gemini API key in code
+- Do **not** hardcode AI API keys in code
 - Do **not** use outdated speech libraries when edge-tts is available
 - Avoid very heavy frameworks unless necessary
 - Do not depend on paid APIs if free alternatives exist
@@ -64,7 +64,7 @@ This document defines clear rules for building AURA so the project stays clean, 
 
 - Every system command must be wrapped in try-except
 - Return friendly error messages to the user
-- If Gemini fails, show a fallback reply
+- If the AI service fails, show a fallback reply
 - If microphone fails, allow text input
 - Log errors in backend console for debugging
 - Never crash the whole application because of one failed command
@@ -83,7 +83,7 @@ except Exception as e:
 
 ## 4. Boundary for AI (Important)
 
-### What AI (Gemini) Should Handle
+### What AI (the AI service) Should Handle
 - General questions
 - Conversations
 - Jokes, facts, explanations
@@ -93,6 +93,7 @@ except Exception as e:
 
 ### What AI Should NOT Directly Control
 - AI should **never** directly execute system commands
+- The AI may *suggest* an intent, but code must validate it against the allowlist (`execute_ai_command`) before executing
 - All system actions must go through the Command Service
 - Dangerous actions must have explicit confirmation from user
 - AI should not be given unrestricted shell access
@@ -101,16 +102,20 @@ except Exception as e:
 ```
 User Message
      ↓
-Intent Detection (Code)
+AI Brain analyzes (any phrasing)
+     ↓
+Code validates the suggested intent (allowlist)
      ↓
 ┌──────────────┬─────────────────┐
-│ System       │  Gemini AI      │
+│ System       │  AI Service    │
 │ Command      │  (Conversation) │
 │ (Safe list)  │                 │
 └──────────────┴─────────────────┘
 ```
 
-Only pre-approved commands are allowed to run on the system.
+The AI **decides** what the user wants and *suggests* an intent; code
+**validates** it against the safe action allowlist and only then executes.
+If the AI is unavailable, keyword matching runs as an offline fallback.
 
 ---
 
@@ -118,7 +123,7 @@ Only pre-approved commands are allowed to run on the system.
 
 - Backend must run only on `127.0.0.1` (localhost)
 - Never expose the backend to the public internet
-- Keep Gemini API key secret
+- Keep AI API keys secret (`.env`, gitignored)
 - Confirm before shutdown / restart / lock
 - Do not allow arbitrary code execution from user input
 

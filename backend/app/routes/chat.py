@@ -1,25 +1,48 @@
 """Chat API routes.
 
-Phase 3: messages are checked against the command service first; known
-commands execute a system action, everything else falls back to a
-conversation reply (Gemini in Phase 4).
+Phase 4 (AI-first): EVERY message is analyzed by the AI brain first. The AI
+decides the intent (any phrasing) and suggests a command; Python validates the
+command against the safe action set and executes it. Keyword matching remains
+as an offline fallback when the AI service is unavailable.
 """
 
 from fastapi import APIRouter
 
-from app.models.schemas import ChatRequest, ChatResponse
-from app.services import command_service
+from app import config
+from app.models.schemas import ChatRequest, ChatResponse, build_analysis
+from app.services import ai_service, command_service
 
 router = APIRouter(prefix="/api", tags=["chat"])
-
-# Simple greetings that get a friendly hello back.
-_GREETINGS = {"hello", "hi", "hey", "hey aura", "hello aura", "namaste"}
 
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(payload: ChatRequest) -> ChatResponse:
-    """Handle a user message: execute a command or reply conversationally."""
-    # 1. Try a system command first.
+    """Handle a user message: AI analyzes it, then safe code executes."""
+    history = [m.model_dump() for m in payload.history]
+
+    # 1. AI brain: analyze the request (intent + question analysis + reply).
+    ai_result = None
+    try:
+        ai_result = ai_service.generate_reply(payload.message, history)
+    except Exception as e:  # noqa: BLE001 - the app must never crash on AI failure
+        print(f"[ai] generate_reply failed: {e}")
+
+    # 2. If the AI suggested a command, validate it and execute it.
+    if ai_result and ai_result.get("command"):
+        result = command_service.execute_ai_command(ai_result["command"])
+        if result is not None:
+            analysis = build_analysis(
+                ai_result.get("analysis") or result.get("analysis", {})
+            )
+            return ChatResponse(
+                reply=result["reply"],
+                type="command",
+                success=result["success"],
+                audio_url=None,
+                analysis=analysis,
+            )
+
+    # 3. Offline fallback: keyword-based detection (works without the AI).
     result = command_service.handle(payload.message)
     if result is not None:
         return ChatResponse(
@@ -27,19 +50,32 @@ def chat(payload: ChatRequest) -> ChatResponse:
             type="command",
             success=result["success"],
             audio_url=None,
+            analysis=build_analysis(result.get("analysis", {})),
         )
 
-    # 2. Not a command -> conversation placeholder (Gemini arrives in Phase 4).
-    message = payload.message.strip().lower()
-    if message in _GREETINGS:
-        reply = (
-            "Hello! I'm AURA, your voice assistant. "
-            "Ask me anything, or try a command like 'open chrome'."
+    # 4. Conversation: show the AI's answer (or a friendly error if AI is down).
+    if ai_result is not None:
+        analysis = build_analysis(
+            ai_result.get("analysis")
+            or {"what": "Answer the user's question", "how": f"AI provider ({config.AI_PROVIDER})"}
         )
-    else:
-        reply = (
-            f"You said: \"{payload.message}\" - I'm still learning. "
-            "Ask me something, or try a command like 'open chrome' or 'what time is it'."
+        return ChatResponse(
+            reply=ai_result["reply"],
+            type="ai",
+            success=True,
+            audio_url=None,
+            analysis=analysis,
         )
 
-    return ChatResponse(reply=reply, type="ai", success=True, audio_url=None)
+    return ChatResponse(
+        reply=(
+            "Sorry, I couldn't reach the AI service. "
+            "Check that AI_PROVIDER and AI_API_KEY are set correctly in backend/.env."
+        ),
+        type="error",
+        success=False,
+        audio_url=None,
+        analysis=build_analysis(
+            {"what": "Answer the user's question", "how": "AI service unavailable"}
+        ),
+    )

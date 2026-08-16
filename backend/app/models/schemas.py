@@ -1,8 +1,32 @@
 """Pydantic request/response models for the AURA chat API."""
 
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+# Every reply leads with an analysis covering all question dimensions.
+# Fields that don't apply are answered with "Not needed".
+ANALYSIS_QUESTIONS = [
+    "What",
+    "When",
+    "Who",
+    "How",
+    "Where",
+    "Why",
+    "Which",
+    "Whose",
+    "Whom",
+    "How much",
+]
+
+
+def build_analysis(answers: Optional[Dict[str, str]] = None) -> List[Dict[str, str]]:
+    """Build the full question analysis, defaulting unneeded fields."""
+    answers = answers or {}
+    return [
+        {"question": question, "answer": str(answers.get(question.lower(), "Not needed"))}
+        for question in ANALYSIS_QUESTIONS
+    ]
 
 
 class ChatMessage(BaseModel):
@@ -32,4 +56,11 @@ class ChatResponse(BaseModel):
     success: bool = True
     audio_url: Optional[str] = Field(
         default=None, description="URL to TTS audio (Phase 5; null until then)"
+    )
+    analysis: List[Dict[str, str]] = Field(
+        default_factory=build_analysis,
+        description=(
+            "Request analysis shown before the reply: What/When/Who/How/Where/... "
+            "each answered or 'Not needed'"
+        ),
     )

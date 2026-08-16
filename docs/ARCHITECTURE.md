@@ -14,17 +14,20 @@ React Frontend (UI + Microphone)
 HTTP Request (POST /api/chat)
         ↓
 Python FastAPI Backend
-        ↓
-   ┌──────────────────────────┐
-   │   Intent Detection       │
-   │                          │
-   │  Is it a system command? │
-   │          │               │
-   │     Yes  │  No           │
-   │      ↓   │   ↓           │
-   │ Command  │  Gemini AI    │
-   │ Service  │  Service      │
-   └──────────────────────────┘
+        ↓   ┌──────────────────────────────┐
+   │  AI Brain analyzes request   │
+   │  (any phrasing) → intent +   │
+   │  question analysis + reply   │
+   └──────────────┬───────────────┘
+                  ↓
+   Code validates the intent
+   (safe action allowlist)
+                  ↓
+   ┌──────────────────────────────┐
+   │ Valid command? Yes → execute │
+   │ No  → conversation answer    │
+   │ (keyword fallback if AI down)│
+   └──────────────────────────────┘
         ↓
 Execute action on Laptop / Generate AI reply
         ↓
@@ -38,21 +41,27 @@ Frontend shows reply + speaks it
 1. **Capture** — The user types or speaks a message in the frontend.
 2. **Send** — `services/api.js` (axios) POSTs `{ "message": "...", "history": [...] }` to `POST http://127.0.0.1:8001/api/chat`.
 3. **Receive** — FastAPI route (`routes/chat.py`) validates the body with Pydantic (`models/schemas.py`).
-4. **Route** — `command_service.py` decides: is this a known system command?
-   - **Yes** → `system_service.py` executes the safe-list action (open app, tell time, …).
-   - **No** → `ai_service.py` calls Google Gemini with conversation history.
-5. **Respond** — The backend returns `{ "reply", "type": "command" | "ai", "success", "audio_url" }`.
+4. **Analyze (AI first)** — `ai_service.py` sends the message to the AI brain, which returns a
+   structured intent (`action`/`target`/`browser`), the question analysis, and a reply.
+5. **Validate & execute** — `command_service.execute_ai_command()` checks the intent against the
+   safe action allowlist and calls `system_service.py` (open app/website, search, time/date).
+   If the AI is unavailable, keyword matching (`command_service.handle()`) runs as an offline fallback.
+6. **Respond** — The backend returns `{ "reply", "type": "command" | "ai" | "error", "success", "audio_url", "analysis" }`.
 6. **Render** — The frontend appends the reply to the Zustand chat store and (Phase 5+) plays the audio.
 
 ### Command vs Conversation Decision
 
+The **AI brain** decides (any phrasing works: "open chrome", "launch chrome",
+"can you show me the time"). Code validates and executes. Keyword matching is
+an offline fallback when the AI is down.
+
 | Input | Detected as | Handled by |
 |-------|-------------|------------|
-| "open chrome" | Command | command_service → system_service |
-| "what time is it" | Command | command_service → system_service |
-| "search google for cats" | Command | command_service → webbrowser |
-| "explain black holes" | Conversation | ai_service → Gemini |
-| "tell me a joke" | Conversation | ai_service → Gemini |
+| "open chrome" / "launch chrome" | Command | AI intent → execute_ai_command → system_service |
+| "what time is it" / "whats the time now" | Command | AI intent → execute_ai_command → system_service |
+| "search google for cats" / "search the web for cats" | Command | AI intent → execute_ai_command → webbrowser |
+| "explain black holes" | Conversation | AI answer |
+| "tell me a joke" | Conversation | AI answer |
 
 ---
 
@@ -99,7 +108,7 @@ aura-assistant/
 │   │   │   └── system.py              # System actions API (Phase 3)
 │   │   ├── services/
 │   │   │   ├── __init__.py
-│   │   │   ├── ai_service.py          # Gemini calls (Phase 4)
+│   │   │   ├── ai_service.py          # ✅ Built — AI calls, provider-agnostic (Phase 4)
 │   │   │   ├── command_service.py     # ✅ Built — intent detection (Phase 3)
 │   │   │   ├── speech_service.py      # edge-tts audio (Phase 5)
 │   │   │   └── system_service.py      # ✅ Built — OS actions (Phase 3)
@@ -137,7 +146,7 @@ aura-assistant/
 | Python 3.10+            | Main language                        |
 | FastAPI                 | Web framework                        |
 | Uvicorn                 | ASGI server                          |
-| Google Gemini API       | AI brain                             |
+| Pluggable AI service (Gemini default) | AI brain        |
 | edge-tts                | High quality Text-to-Speech          |
 | pyautogui               | Mouse/keyboard & system control      |
 | webbrowser / os / subprocess | Open apps & websites            |
@@ -176,7 +185,19 @@ aura-assistant/
   "reply": "Opening Google Chrome for you.",
   "type": "command",
   "success": true,
-  "audio_url": null
+  "audio_url": null,
+  "analysis": [
+    {"question": "What", "answer": "Open the 'chrome' application"},
+    {"question": "When", "answer": "Not needed"},
+    {"question": "Who", "answer": "Not needed"},
+    {"question": "How", "answer": "Launch via the operating system's app launcher"},
+    {"question": "Where", "answer": "Not needed"},
+    {"question": "Why", "answer": "Not needed"},
+    {"question": "Which", "answer": "Not needed"},
+    {"question": "Whose", "answer": "Not needed"},
+    {"question": "Whom", "answer": "Not needed"},
+    {"question": "How much", "answer": "Not needed"}
+  ]
 }
 ```
 
@@ -204,7 +225,7 @@ aura-assistant/
 | `routes/chat.py` | `POST /api/chat` — validates + orchestrates |
 | `services/command_service.py` | Keyword-based intent detection |
 | `services/system_service.py` | Executes safe-list OS actions |
-| `services/ai_service.py` | Calls Gemini with history |
+| `services/ai_service.py` | Calls the configured AI provider with history |
 | `services/speech_service.py` | Generates TTS audio via edge-tts |
 | `models/schemas.py` | Pydantic request/response models |
 
@@ -226,7 +247,7 @@ Intent detection ── error ──► friendly reply, success=false
         ↓
 System command ── exception ──► "Sorry, I couldn't do that." + logged error
         ↓
-Gemini call ── exception ──► fallback reply, success=false
+AI call ── exception ──► fallback reply, success=false
         ↓
 Return consistent JSON
 ```
@@ -250,6 +271,7 @@ Loaded from `backend/.env` by `config.py` (gitignored; template in `.env.example
 - **Add a command** → add a keyword → action entry in `command_service.py` + the action in `system_service.py`.
 - **Add an API route** → create `routes/<name>.py`, include the router in `main.py`, add a Pydantic model in `schemas.py`.
 - **Add a frontend feature** → new component under `components/`, state in `store/chatStore.js`, styles with Tailwind tokens from `docs/DESIGN.md`.
+- **Change the AI provider** → edit `backend/.env`: `AI_PROVIDER=gemini|openai|ollama`, plus `AI_API_KEY` / `AI_MODEL`. Providers live in `services/ai_service.py`.
 - **Change ports** → edit `backend/.env` (`PORT`) and `frontend/vite.config.js` (`server.port`).
 
 ---
@@ -263,6 +285,7 @@ Loaded from `backend/.env` by `config.py` (gitignored; template in `.env.example
 | v1.0 | 2026-08-16 | Expanded: added request lifecycle walkthrough, module responsibility tables, error flow, configuration table, extension points; marked built files with ✅. |
 | v1.1 | 2026-08-16 | Marked Phase 2 files as built (chat route, schemas, api.js, chatStore, ChatBubble, ChatWindow). |
 | v1.2 | 2026-08-16 | Marked Phase 3 services as built (command_service, system_service). |
+| v1.3 | 2026-08-16 | Marked ai_service as built (Groq provider, structured replies). |
 
 ---
 

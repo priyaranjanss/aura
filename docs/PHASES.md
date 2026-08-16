@@ -12,7 +12,7 @@ Complete one phase fully before moving to the next.
 | 1     | Foundation & Login/UI Shell | Basic structure + simple UI               | 1–2 days      |
 | 2     | Dashboard & Core Chat       | Working chat interface + backend connection | 1–2 days    |
 | 3     | System Commands             | Computer control features                 | 2 days        |
-| 4     | AI Integration              | Gemini intelligence                       | 1–2 days      |
+| 4     | AI Integration              | AI intelligence (Gemini default)          | 1–2 days      |
 | 5     | Voice Features              | Speech-to-Text + Text-to-Speech           | 2 days        |
 | 6     | Advanced UI & Polish        | Final design, settings, extra features    | 1–2 days      |
 
@@ -25,7 +25,7 @@ Complete one phase fully before moving to the next.
 | 1     | Foundation & Basic Shell    | ✅ Done             | 2026-08-16 |
 | 2     | Dashboard & Core Chat       | ✅ Done             | 2026-08-16 |
 | 3     | System Commands             | ✅ Done             | 2026-08-16 |
-| 4     | AI Integration              | ⬜ Not started      | — |
+| 4     | AI Integration              | ✅ Done             | 2026-08-16 |
 | 5     | Voice Features              | ⬜ Not started      | — |
 | 6     | Advanced UI & Polish        | ⬜ Not started      | — |
 
@@ -104,16 +104,17 @@ Complete one phase fully before moving to the next.
 
 ---
 
-## Phase 4: AI Integration (Gemini)
+## Phase 4: AI Integration (AI Service) ✅
 
 **Goal:** Add intelligent conversation ability.
 
 **Tasks:**
-- [ ] Integrate Google Gemini API
-- [ ] Create `ai_service.py`
-- [ ] Send conversation history for context
-- [ ] Route non-command messages to Gemini
-- [ ] Handle API errors gracefully
+- [x] Integrate the AI service (default provider: Groq; Gemini/OpenAI/Ollama swappable)
+- [x] Create `ai_service.py` (provider-agnostic)
+- [x] Send conversation history for context
+- [x] Route non-command messages to the AI service
+- [x] AI replies include the same request analysis format (What/When/Who/How/... first, "Not needed" when not applicable)
+- [x] Handle API errors gracefully
 
 **Deliverable:** You can ask any question and get smart answers.
 
@@ -214,6 +215,7 @@ Complete one phase fully before moving to the next.
 | v1.0 | 2026-08-16 | Expanded: added progress tracker, acceptance criteria per phase, dependency map, definition of done. |
 | v1.1 | 2026-08-16 | Marked Phase 2 complete (chat wired frontend ↔ backend). |
 | v1.2 | 2026-08-16 | Marked Phase 3 complete (system commands: apps, websites, search, time/date). |
+| v1.3 | 2026-08-16 | Marked Phase 4 complete (AI integration with Groq provider). |
 
 ---
 

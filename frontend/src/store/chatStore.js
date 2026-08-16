@@ -34,7 +34,11 @@ export const useChatStore = create((set, get) => ({
       set((state) => ({
         messages: [
           ...state.messages,
-          makeMessage('assistant', data.reply, { type: data.type }),
+          makeMessage('assistant', data.reply, {
+            type: data.type,
+            analysis: data.analysis,
+            isError: data.success === false,
+          }),
         ],
         status: 'idle',
       }));

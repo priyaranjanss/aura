@@ -30,7 +30,9 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Open Calculator | ✅ Phase 3 |
 | Open File Explorer / Finder | ✅ Phase 3 |
 | Open Spotify | ⬜ Future (add to safe list) |
-| Open any installed application by name | ⬜ Future (safe-list only) |
+| Open any installed application by name | ✅ Phase 4 (validated generic opener) |
+| Close applications ("close brave", "quit chrome") | ✅ Phase 4 |
+| Type/write into apps ("write hello" after opening Notepad) | ✅ Phase 4 (pyautogui, safe text) |
 
 ### Web & Search
 | Feature | Status |
@@ -58,14 +60,15 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 
 | Feature | Status |
 |---------|--------|
-| Powered by Google Gemini | ⬜ Phase 4 |
-| Natural language understanding | ⬜ Phase 4 |
-| Context-aware conversations (remembers previous messages) | ⬜ Phase 4 |
-| Answer general knowledge questions | ⬜ Phase 4 |
-| Tell jokes, fun facts, motivational quotes | ⬜ Phase 4 |
-| Explain topics in simple language | ⬜ Phase 4 |
+| Powered by a pluggable AI service (Groq active; Gemini/OpenAI/Ollama swappable) | ✅ Phase 4 |
+| Natural language understanding | ✅ Phase 4 |
+| Context-aware conversations (remembers previous messages) | ✅ Phase 4 |
+| Answer general knowledge questions | ✅ Phase 4 |
+| Tell jokes, fun facts, motivational quotes | ✅ Phase 4 |
+| Explain topics in simple language | ✅ Phase 4 |
 | Multilingual support (English + Hindi) | ⬜ Phase 6 |
-| Smart intent detection (system action vs conversation) | ✅ Phase 3 (rules) → Phase 4 (advanced) |
+| Smart intent detection (system action vs conversation) | ✅ Phase 4 (AI brain, any phrasing) + keyword fallback |
+| Request analysis before every reply (What/When/Who/How/Where/Why/Which/Whose/Whom/How much, "Not needed" when not applicable) | ✅ Phase 3 |
 
 ---
 
@@ -136,7 +139,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 - Time & date
 
 **Phase 4**
-- Gemini AI replies
+- AI replies
 - Context awareness
 
 **Phase 5**
@@ -160,5 +163,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | v1.0 | 2026-08-16 | Expanded: added status column per feature mapped to phases, priority section aligned with PHASES.md. |
 | v1.1 | 2026-08-16 | Marked Phase 2 chat features as done (bubbles, history, Zustand, basic errors). |
 | v1.2 | 2026-08-16 | Marked Phase 3 system commands as done (apps, websites, search, time/date). |
+| v1.3 | 2026-08-16 | Added request-analysis feature (all question dimensions answered before the reply). |
+| v1.4 | 2026-08-16 | Marked Phase 4 AI features as done (Groq provider, context, structured analysis). |
 
 ---

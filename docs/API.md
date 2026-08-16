@@ -31,9 +31,9 @@ curl http://127.0.0.1:8001/
 
 **POST** `/api/chat`
 
-Send a user message (from voice or text). The backend will either execute a system command or reply using Gemini.
+Send a user message (from voice or text). Every message is first analyzed by the **AI brain** (any phrasing): it returns a suggested intent, the question analysis, and a reply. Code validates the intent against the safe action allowlist and executes it (commands) or shows the AI's answer (conversation). Keyword detection is an offline fallback if the AI is unreachable.
 
-> **Status:** Live since Phase 2 (placeholder reply logic; intent detection in Phase 3, Gemini in Phase 4).
+> **Status:** Live since Phase 2 (placeholder reply logic; intent detection in Phase 3, AI service in Phase 4).
 
 **Request Body**
 ```json
@@ -52,7 +52,19 @@ Send a user message (from voice or text). The backend will either execute a syst
   "reply": "Opening Google Chrome for you.",
   "type": "command",
   "success": true,
-  "audio_url": null
+  "audio_url": null,
+  "analysis": [
+    {"question": "What", "answer": "Open the 'chrome' application"},
+    {"question": "When", "answer": "Not needed"},
+    {"question": "Who", "answer": "Not needed"},
+    {"question": "How", "answer": "Launch via the operating system's app launcher"},
+    {"question": "Where", "answer": "Not needed"},
+    {"question": "Why", "answer": "Not needed"},
+    {"question": "Which", "answer": "Not needed"},
+    {"question": "Whose", "answer": "Not needed"},
+    {"question": "Whom", "answer": "Not needed"},
+    {"question": "How much", "answer": "Not needed"}
+  ]
 }
 ```
 
@@ -61,9 +73,10 @@ Send a user message (from voice or text). The backend will either execute a syst
 | Field | Type | Meaning |
 |-------|------|---------|
 | `reply` | string | The assistant's text reply (shown and/or spoken) |
-| `type` | string | `"command"` (system action) or `"ai"` (Gemini reply) |
+| `type` | string | `"command"` (system action) or `"ai"` (AI reply) |
 | `success` | boolean | Whether the action/reply succeeded |
 | `audio_url` | string \| null | URL to TTS audio (Phase 5; `null` until then) |
+| `analysis` | array | Request analysis shown before the reply: `{question, answer}` pairs for What/When/Who/How/Where/Why/Which/Whose/Whom/How much — each answered or `"Not needed"` |
 
 **Example (curl)**
 ```
@@ -81,9 +94,12 @@ These are examples of messages the backend understands (live since Phase 3):
 | User Message                  | Action                          |
 |-------------------------------|---------------------------------|
 | open chrome                   | Opens Google Chrome             |
+| close brave                   | Closes Brave (also "quit/exit X") |
+| write hello                   | Types "hello" into the active app (context-aware) |
 | open notepad                  | Opens Notepad                   |
 | open vs code                  | Opens Visual Studio Code        |
 | open youtube                  | Opens YouTube                   |
+| open youtube in brave         | Opens YouTube in Brave/Chrome/Firefox/Edge |
 | search google for cats        | Searches Google                 |
 | play music on youtube         | Opens YouTube music search      |
 | what time is it               | Returns current time            |
@@ -111,7 +127,7 @@ Returns current backend status and loaded services.
 {
   "status": "online",
   "services": ["command", "ai", "speech"],
-  "gemini_configured": true,
+  "ai_configured": true,
   "version": "0.1.0"
 }
 ```
@@ -147,7 +163,7 @@ Used for real-time status updates (Listening, Thinking, Speaking).
 |----------|-------------|----------|
 | Missing/invalid `message` field | 422 | FastAPI validation error |
 | Command failed at runtime | 200 | `success: false` + friendly `reply` |
-| Gemini API key missing | 200 | `success: false` + fallback reply |
+| AI API key missing / provider error | 200 | `type: "error"`, `success: false` + friendly reply |
 | Server exception | 500 | `success: false` + generic message |
 
 ---
@@ -164,7 +180,7 @@ only pages running on this machine can reach it. No credentials are used
 ## Notes for Developers
 
 - Always send the `message` field.
-- `history` is optional but recommended for better AI context.
+- `history` is optional but recommended for better AI context — the AI uses it for follow-ups (e.g. after "open youtube in brave", "search X" becomes a YouTube search in Brave).
 - Keep messages reasonably short for best performance.
 - Dangerous actions (shutdown/restart) should be confirmed on the frontend before calling the API.
 - Backend must stay on `127.0.0.1` — never expose it publicly.
@@ -182,5 +198,8 @@ only pages running on this machine can reach it. No credentials are used
 | v1.2 | 2026-08-16 | `/api/chat` implemented (Phase 2); removed "planned" status. |
 | v1.3 | 2026-08-16 | CORS now allows any local origin (dev-permissive; server bound to 127.0.0.1). |
 | v1.4 | 2026-08-16 | Commands live (Phase 3): open apps/websites, search Google/YouTube/Wikipedia, time & date. |
+| v1.5 | 2026-08-16 | Added `analysis` field to responses (What/When/Who/How/Where/... with "Not needed" defaults). |
+| v1.6 | 2026-08-16 | Added "open <website> in <browser>" command (App Paths on Windows, fallback to default browser). |
+| v1.7 | 2026-08-16 | Added "close/quit/exit <app>" (graceful quit via taskkill/osascript/pkill). |
 
 ---
