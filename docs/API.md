@@ -76,7 +76,7 @@ curl -X POST http://127.0.0.1:8001/api/chat \
 
 ## 3. Available Commands Reference
 
-These are examples of messages the backend understands (Phase 3):
+These are examples of messages the backend understands (live since Phase 3):
 
 | User Message                  | Action                          |
 |-------------------------------|---------------------------------|
@@ -93,7 +93,10 @@ These are examples of messages the backend understands (Phase 3):
 | take screenshot               | Captures and saves screenshot   |
 | lock computer                 | Locks the session               |
 
-> **Note:** volume, screenshot and lock land in Phase 6; the rest in Phase 3.
+> **Note:** volume, screenshot and lock land in Phase 6; the rest are live since Phase 3.
+>
+> "open <anything>" also works for any installed app by name (name is validated:
+> letters/digits/spaces only — paths and shell metacharacters are rejected).
 
 ---
 
@@ -178,5 +181,6 @@ only pages running on this machine can reach it. No credentials are used
 | v1.1 | 2026-08-16 | Base URL updated to port 8001; added response field table, curl examples, error scenario table, planned-status notes. |
 | v1.2 | 2026-08-16 | `/api/chat` implemented (Phase 2); removed "planned" status. |
 | v1.3 | 2026-08-16 | CORS now allows any local origin (dev-permissive; server bound to 127.0.0.1). |
+| v1.4 | 2026-08-16 | Commands live (Phase 3): open apps/websites, search Google/YouTube/Wikipedia, time & date. |
 
 ---

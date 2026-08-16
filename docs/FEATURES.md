@@ -24,30 +24,30 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 ### Application Control
 | Feature | Status |
 |---------|--------|
-| Open Chrome / Edge / Firefox | ⬜ Phase 3 |
-| Open VS Code | ⬜ Phase 3 |
-| Open Notepad / TextEdit | ⬜ Phase 3 |
-| Open Calculator | ⬜ Phase 3 |
-| Open File Explorer / Finder | ⬜ Phase 3 |
-| Open Spotify | ⬜ Phase 3 |
-| Open any installed application by name | ⬜ Phase 3 |
+| Open Chrome / Edge / Firefox | ✅ Phase 3 |
+| Open VS Code | ⬜ Future (add to safe list) |
+| Open Notepad / TextEdit | ✅ Phase 3 |
+| Open Calculator | ✅ Phase 3 |
+| Open File Explorer / Finder | ✅ Phase 3 |
+| Open Spotify | ⬜ Future (add to safe list) |
+| Open any installed application by name | ⬜ Future (safe-list only) |
 
 ### Web & Search
 | Feature | Status |
 |---------|--------|
-| Open Google, YouTube, Gmail, Wikipedia, GitHub, etc. | ⬜ Phase 3 |
-| Search Google by voice/text | ⬜ Phase 3 |
-| Search YouTube | ⬜ Phase 3 |
-| Search Wikipedia and get summary | ⬜ Phase 3 |
+| Open Google, YouTube, Gmail, Wikipedia, GitHub, etc. | ✅ Phase 3 |
+| Search Google by voice/text | ✅ Phase 3 |
+| Search YouTube | ✅ Phase 3 |
+| Search Wikipedia and get summary | ⬜ Phase 6 (summary) · ✅ Phase 3 (open search) |
 
 ### Media & System
 | Feature | Status |
 |---------|--------|
-| Play music on YouTube | ⬜ Phase 3 |
+| Play music on YouTube | ✅ Phase 3 |
 | Increase / Decrease / Mute / Unmute volume | ⬜ Phase 6 |
 | Take screenshot and save it | ⬜ Phase 6 |
-| Tell current time | ⬜ Phase 3 |
-| Tell current date | ⬜ Phase 3 |
+| Tell current time | ✅ Phase 3 |
+| Tell current date | ✅ Phase 3 |
 | Lock the computer | ⬜ Phase 6 |
 | Shutdown computer (with confirmation) | ⬜ Phase 6 |
 | Restart computer (with confirmation) | ⬜ Phase 6 |
@@ -65,7 +65,7 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 | Tell jokes, fun facts, motivational quotes | ⬜ Phase 4 |
 | Explain topics in simple language | ⬜ Phase 4 |
 | Multilingual support (English + Hindi) | ⬜ Phase 6 |
-| Smart intent detection (system action vs conversation) | ⬜ Phase 3 (rules) → Phase 4 (advanced) |
+| Smart intent detection (system action vs conversation) | ✅ Phase 3 (rules) → Phase 4 (advanced) |
 
 ---
 
@@ -159,5 +159,6 @@ This document lists all features of the AURA Voice Assistant, grouped by categor
 |---------|------|-------|
 | v1.0 | 2026-08-16 | Expanded: added status column per feature mapped to phases, priority section aligned with PHASES.md. |
 | v1.1 | 2026-08-16 | Marked Phase 2 chat features as done (bubbles, history, Zustand, basic errors). |
+| v1.2 | 2026-08-16 | Marked Phase 3 system commands as done (apps, websites, search, time/date). |
 
 ---

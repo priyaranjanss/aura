@@ -24,7 +24,7 @@ Complete one phase fully before moving to the next.
 |-------|-----------------------------|---------------------|-----------|
 | 1     | Foundation & Basic Shell    | ✅ Done             | 2026-08-16 |
 | 2     | Dashboard & Core Chat       | ✅ Done             | 2026-08-16 |
-| 3     | System Commands             | ⬜ Not started      | — |
+| 3     | System Commands             | ✅ Done             | 2026-08-16 |
 | 4     | AI Integration              | ⬜ Not started      | — |
 | 5     | Voice Features              | ⬜ Not started      | — |
 | 6     | Advanced UI & Polish        | ⬜ Not started      | — |
@@ -79,18 +79,18 @@ Complete one phase fully before moving to the next.
 
 ---
 
-## Phase 3: System Commands
+## Phase 3: System Commands ✅
 
 **Goal:** Make the assistant control the computer.
 
 **Tasks:**
-- [ ] Create `command_service.py` and `system_service.py`
-- [ ] Implement: open applications
-- [ ] Implement: open websites
-- [ ] Implement: search Google / YouTube
-- [ ] Implement: tell time & date
-- [ ] Add intent detection (simple keyword based)
-- [ ] Test all commands thoroughly
+- [x] Create `command_service.py` and `system_service.py`
+- [x] Implement: open applications
+- [x] Implement: open websites
+- [x] Implement: search Google / YouTube
+- [x] Implement: tell time & date
+- [x] Add intent detection (simple keyword based)
+- [x] Test all commands thoroughly
 
 **Deliverable:** Saying or typing "open chrome" actually opens Chrome.
 
@@ -213,6 +213,7 @@ Complete one phase fully before moving to the next.
 |---------|------|-------|
 | v1.0 | 2026-08-16 | Expanded: added progress tracker, acceptance criteria per phase, dependency map, definition of done. |
 | v1.1 | 2026-08-16 | Marked Phase 2 complete (chat wired frontend ↔ backend). |
+| v1.2 | 2026-08-16 | Marked Phase 3 complete (system commands: apps, websites, search, time/date). |
 
 ---
 

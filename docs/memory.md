@@ -57,6 +57,46 @@ Progress notes logged at the end of each phase (per docs/PHASES.md).
 
 ---
 
+## Phase 3 – System Commands ✅ (completed)
+
+**Goal:** Make the assistant control the computer.
+
+**Completed:**
+- `services/command_service.py` — keyword/regex intent detection:
+  - time/date, "open X" (apps + websites), "search google/youtube/wikipedia for X",
+    "play music", "play X on youtube"
+  - Returns `None` for non-commands so conversation (Gemini, Phase 4) takes over
+- `services/system_service.py` — safe-list OS actions (all try-except wrapped):
+  - Apps: notepad, calculator, paint, cmd, explorer, chrome, firefox, edge (per-OS)
+  - Websites: google, youtube, gmail, wikipedia, github, stack overflow, maps, news
+  - Google / YouTube / Wikipedia search via webbrowser
+  - Time + date
+- `routes/chat.py` routes commands first; greetings/echo remain as conversation fallback
+
+**Verified (live, opened real windows/tabs):**
+- "what time is it" → "The time is 03:42 PM."
+- "what is today's date" → "Today is Sunday, 16 August 2026."
+- "search google for cats" → Google search tab
+- "open youtube" → youtube.com
+- "open notepad" / "open chrome" → apps opened
+- "open spotify" → friendly "no shortcut" message (success=false)
+- "hello" / non-commands → conversation fallback
+
+**Notes / next phase (Phase 4 – AI Integration):**
+- Hook Gemini into the conversation fallback in `routes/chat.py` via `ai_service.py`
+- Send history for context; handle missing/invalid API key gracefully
+
+**Improvement (same day): generic app opening**
+- `system_service.open_app` now opens ANY installed app by name (validated:
+  letters/digits/spaces only; paths & shell metachars rejected). Known apps
+  still use the per-OS map; others go to the OS launcher (`os.startfile` on
+  Windows, `open -a` on macOS). Verified: "open snippingtool" opens it;
+  "open ../../evil" and "open calc & del *" are rejected.
+- The real "brain" (Gemini intent detection) lands in Phase 4 — Gemini decides
+  the action, code still executes it (per RULES.md safety boundary).
+
+---
+
 ## Fixes (2026-08-16)
 
 - **CORS:** changed to `allow_origins=["*"]` (credentials off) so any local
@@ -93,3 +133,5 @@ PHASES, DESIGN, FEATURES, API, DEVELOPMENT, and this file.
 | v1.1 | 2026-08-16 | Added project convention: no emojis in frontend/UI. |
 | v1.2 | 2026-08-16 | Added Phase 2 completion log. |
 | v1.3 | 2026-08-16 | Logged CORS fix and duplicate-frontend-port issue. |
+| v1.4 | 2026-08-16 | Added Phase 3 completion log. |
+| v1.5 | 2026-08-16 | Logged generic app opening (no enumeration needed) + safety validation. |

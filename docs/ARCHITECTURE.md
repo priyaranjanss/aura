@@ -100,9 +100,9 @@ aura-assistant/
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── ai_service.py          # Gemini calls (Phase 4)
-│   │   │   ├── command_service.py     # Intent detection (Phase 3)
+│   │   │   ├── command_service.py     # ✅ Built — intent detection (Phase 3)
 │   │   │   ├── speech_service.py      # edge-tts audio (Phase 5)
-│   │   │   └── system_service.py      # OS actions (Phase 3)
+│   │   │   └── system_service.py      # ✅ Built — OS actions (Phase 3)
 │   │   └── models/
 │   │       └── schemas.py             # ✅ Built — Pydantic models (Phase 2)
 │   ├── requirements.txt
@@ -262,6 +262,7 @@ Loaded from `backend/.env` by `config.py` (gitignored; template in `.env.example
 |---------|------|-------|
 | v1.0 | 2026-08-16 | Expanded: added request lifecycle walkthrough, module responsibility tables, error flow, configuration table, extension points; marked built files with ✅. |
 | v1.1 | 2026-08-16 | Marked Phase 2 files as built (chat route, schemas, api.js, chatStore, ChatBubble, ChatWindow). |
+| v1.2 | 2026-08-16 | Marked Phase 3 services as built (command_service, system_service). |
 
 ---
 
