@@ -1,12 +1,10 @@
 # AURA – Setup & Installation Guide
 
-This guide will help you set up the complete AURA Voice Assistant from scratch on your laptop.
+This guide explains how to install and run the AURA Voice Assistant on your laptop.
 
 ---
 
 ## 1. Prerequisites
-
-Make sure you have the following installed:
 
 ### Required Software
 - **Python 3.10+** → [Download](https://www.python.org/downloads/)
@@ -30,79 +28,93 @@ npm --version
 1. Go to [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 2. Sign in with your Google account
 3. Click **Create API Key**
-4. Copy the key (you will need it later)
+4. Copy the key
+
+> **Note:** The key is only used from Phase 4 (Gemini AI) onward. The app runs
+> fine without it during Phase 1–3.
 
 ---
 
 ## 3. Project Setup
 
-### Step 1: Create Project Folder
+The project is already fully scaffolded, so setup is just two steps:
+install backend dependencies and install frontend dependencies.
+
+### Step 1: Backend Setup
 
 ```bash
-mkdir aura-assistant
-cd aura-assistant
-```
-
-### Step 2: Backend Setup
-
-```bash
-mkdir backend
 cd backend
 
-# Create virtual environment
+# 1. Create and activate a virtual environment
 python -m venv venv
 
-# Activate virtual environment
-# Windows:
+# Windows (cmd/PowerShell):
 venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
+# Windows (Git Bash) / Mac / Linux:
+source venv/Scripts/activate   # Git Bash
+# source venv/bin/activate     # Mac / Linux
 
-# Create requirements.txt and install
-pip install fastapi uvicorn python-dotenv google-generativeai edge-tts pyautogui pillow pydantic
+# 2. Install backend dependencies
+pip install -r requirements.txt
 ```
 
-Create a file named `.env` inside `backend/` folder:
+Create the environment file. A template already exists at `backend/.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and set your Gemini API key (can be left empty for now):
 
 ```
 GEMINI_API_KEY=your_actual_api_key_here
 HOST=127.0.0.1
-PORT=8000
+PORT=8001
 ```
 
-### Step 3: Frontend Setup
+> `.env` is gitignored — never commit it. Only `.env.example` is tracked.
 
-Open a **new terminal** and go back to the project root:
+### Step 2: Frontend Setup
+
+Open a **new terminal** (or deactivate the venv first):
 
 ```bash
-cd aura-assistant
-npm create vite@latest frontend -- --template react
 cd frontend
 npm install
-npm install axios tailwindcss postcss autoprefixer zustand
-npx tailwindcss init -p
 ```
 
 ---
 
 ## 4. Running the Application
 
-### Start Backend
+You need **two terminals**: one for the backend, one for the frontend.
+
+### Start Backend (Terminal 1)
 
 ```bash
 cd backend
-# Activate venv if not already active
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Mac/Linux
-
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+# Activate venv if not already active (see Step 1)
+python run.py
 ```
 
-Backend will run at: **http://127.0.0.1:8000**
+`run.py` reads `HOST` and `PORT` from `.env` and enables auto-reload.
 
-### Start Frontend
+Alternative (same result, no launcher):
 
-Open another terminal:
+```bash
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+```
+
+Backend will run at: **http://127.0.0.1:8001**
+
+Verify it is up by opening http://127.0.0.1:8001/ in the browser — you should
+see:
+
+```json
+{"status": "online", "message": "Hello from AURA"}
+```
+
+### Start Frontend (Terminal 2)
 
 ```bash
 cd frontend
@@ -111,15 +123,19 @@ npm run dev
 
 Frontend will run at: **http://localhost:5173**
 
+Open that URL in Chrome. You should see the AURA dark-themed interface
+(sidebar + chat area + input box).
+
 ---
 
 ## 5. First Run Checklist
 
 - [ ] Backend is running without errors
-- [ ] Frontend opens in browser
-- [ ] Microphone permission is allowed
-- [ ] Gemini API key is correctly set in `.env`
-- [ ] You can type a message and get a reply
+- [ ] http://127.0.0.1:8001/ shows `"message": "Hello from AURA"`
+- [ ] Frontend opens in browser at http://localhost:5173
+- [ ] AURA interface (sidebar + empty chat + input box) is visible
+- [ ] (Later phases) Microphone permission is allowed
+- [ ] (Later phases) Gemini API key is correctly set in `.env`
 
 ---
 
@@ -131,7 +147,8 @@ Frontend will run at: **http://localhost:5173**
 | Gemini API error               | Check API key in `.env`                       |
 | CORS error                     | Make sure backend CORS is enabled             |
 | Module not found               | Activate virtual environment                  |
-| Port already in use            | Change port or kill previous process          |
+| `python run.py` not found      | Make sure you are inside the `backend/` folder |
+| Port already in use            | Change port in `.env` or kill previous process |
 | pyautogui not working on Mac   | Give Accessibility permission to Terminal     |
 
 ---
@@ -142,16 +159,25 @@ Frontend will run at: **http://localhost:5173**
 aura-assistant/
 ├── backend/
 │   ├── app/
-│   ├── venv/
-│   ├── .env
-│   └── requirements.txt
+│   │   ├── main.py          # FastAPI app (hello endpoint, CORS)
+│   │   ├── config.py        # Loads .env settings
+│   │   ├── routes/          # API routes (chat comes in Phase 2)
+│   │   ├── services/        # Business logic (Phase 3+)
+│   │   └── models/          # Pydantic schemas (Phase 2+)
+│   ├── venv/                # Virtual environment (not committed)
+│   ├── .env                 # Your secrets (not committed)
+│   ├── .env.example         # Template for .env
+│   ├── requirements.txt
+│   └── run.py               # Convenience launcher
 ├── frontend/
 │   ├── src/
+│   │   ├── components/      # Sidebar.jsx, etc.
+│   │   ├── pages/           # Home.jsx (chat area)
+│   │   └── ...
 │   ├── package.json
 │   └── ...
-├── README.md
-├── SETUP.md
-└── ...
+├── docs/                    # All documentation (PRD, phases, design, etc.)
+└── README.md
 ```
 
 ---

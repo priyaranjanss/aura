@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-aura-bg font-sans text-white antialiased;
+  }
+
+  ::selection {
+    @apply bg-aura-primary text-white;
+  }
+}
+
+/* Slim dark scrollbar for the chat area */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-aura-surface-light;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-aura-border;
+}
